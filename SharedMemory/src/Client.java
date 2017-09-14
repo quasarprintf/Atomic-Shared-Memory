@@ -53,7 +53,8 @@ public class Client {
 		int maxSeq = -1;
 		int maxPc = -1;
 		
-		for (int i = 0; i < (addresses.length / 2) + 1; i++) //address.length / 2 is an int and should self-truncate
+		int i = 0;
+		while (i < (addresses.length / 2) + 1) //address.length / 2 is an int and should self-truncate
 		{
 			packet = new DatagramPacket(null, 0);
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
@@ -71,6 +72,7 @@ public class Client {
 					maxSeq = Integer.parseInt(response[3]);
 					maxPc = Integer.parseInt(response[1]);
 				}	
+				i++;
 			}
 			else	//timed out without finding a packet, so retransmit to remaining servers
 			{
@@ -81,7 +83,6 @@ public class Client {
 					finally {new RuntimeException("ERROR - resendSet smaller than expected");}
 					socket.send(packet);
 				}
-				i--;
 			}
 			
 		}
@@ -108,7 +109,8 @@ public class Client {
 		socket.setSoTimeout(100);	//TODO : get better timeout duration
 		String[] response = new String[4];
 		
-		for (int i = 0; i < (addresses.length / 2) + 1; i++) //address.length / 2 is an int and should self-truncate
+		int i = 0;
+		while (i < (addresses.length / 2) + 1) //address.length / 2 is an int and should self-truncate
 		{
 			packet = new DatagramPacket(null, 0);
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
@@ -119,6 +121,7 @@ public class Client {
 				response = response[0].split(":");
 				//TODO : validate somehow that the packet is indeed a response to this write and not a prior read/write
 				resendSet.remove(packet.getAddress());
+				i++;
 			}
 			else	//timed out without finding a packet, so retransmit to remaining servers
 			{
@@ -129,7 +132,6 @@ public class Client {
 					finally {new RuntimeException("ERROR - resendSet smaller than expected");}
 					socket.send(packet);
 				}
-				i--;
 			}
 			
 		}
