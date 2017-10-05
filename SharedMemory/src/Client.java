@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -27,7 +28,8 @@ public class Client {
 	public void write(String key, String value) throws IOException
 	{
 		String seqId = readMessage(key)[3];
-		writeMessage(key, value, Integer.parseInt(seqId));
+		seqId = seqId.trim();
+		writeMessage(key, value, Integer.parseInt(seqId) + 1);
 	}
 	
 	private String[] readMessage(String key) throws IOException
@@ -47,7 +49,7 @@ public class Client {
 		}
 		
 		//wait for and read responses
-		socket.setSoTimeout(100);	//TODO : get better timeout duration
+		socket.setSoTimeout(1000);	//TODO : get better timeout duration
 		String[] response = new String[4];
 		String value = "0";
 		int maxSeq = -1;
@@ -56,13 +58,17 @@ public class Client {
 		int i = 0;
 		while (i < (addresses.length / 2) + 1) //address.length / 2 is an int and should self-truncate
 		{
-			packet = new DatagramPacket(null, 0);
+			packet = new DatagramPacket(new byte[1024], 1024);
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
-			finally{}
+			catch (SocketTimeoutException e){}
 			if (packet.getData() != null)	//found a packet
 			{
 				response[0] = new String(packet.getData());
 				response = response[0].split(":");
+				for (int trim = 0; trim < 4; trim++)
+				{
+					response[trim] = response[trim].trim();
+				}
 				//TODO : validate somehow that the packet is indeed a response to this read and not a prior read/write
 				resendSet.remove(packet.getAddress());
 				//track most recent data
@@ -87,7 +93,12 @@ public class Client {
 			
 		}
 		socket.close();
-		return value.split(":");
+		String[] returnString = value.split(":");
+		for (int trim = 0; trim < 4; trim++)
+		{
+			returnString[trim] = returnString[trim].trim();
+		}
+		return returnString;
 	}
 	
 	public void writeMessage(String key, String value, int seqId) throws IOException
@@ -106,15 +117,15 @@ public class Client {
 		}
 		
 		//wait for responses
-		socket.setSoTimeout(100);	//TODO : get better timeout duration
+		socket.setSoTimeout(1000);	//TODO : get better timeout duration
 		String[] response = new String[4];
 		
 		int i = 0;
 		while (i < (addresses.length / 2) + 1) //address.length / 2 is an int and should self-truncate
 		{
-			packet = new DatagramPacket(null, 0);
+			packet = new DatagramPacket(new byte[0], 0);
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
-			finally{}
+			catch (SocketTimeoutException e){}
 			if (packet.getData() != null)	//found a packet
 			{
 				response[0] = new String(packet.getData());
