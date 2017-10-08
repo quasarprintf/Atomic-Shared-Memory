@@ -1,3 +1,4 @@
+package Client;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -6,12 +7,12 @@ import java.net.SocketTimeoutException;
 import java.util.HashSet;
 import java.util.Iterator;
 
-public class Client {
+public class ClientClass {
 	int pcid;	//save the pcid of the machine in the class
 	InetAddress[] addresses;	//list of server addresses. Can be modified with functions (WIP)
 	int port = 2000;	//port to use for everything
 	
-	Client(int PCID, int PORT, InetAddress[] ADDRESSES)
+	ClientClass(int PCID, int PORT, InetAddress[] ADDRESSES)
 	{
 		pcid = PCID;
 		port = PORT;
