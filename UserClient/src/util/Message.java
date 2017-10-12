@@ -8,9 +8,12 @@ public class Message {
 	private String value = null;
 	private int seqID = -2;
 	
-	Message(String messageString)
+	public Message(String messageString)
 	{
 		String[] messageArray = messageString.split(":");
+		for (int trim = 0; trim < messageArray.length; trim++)
+		{messageArray[trim] = messageArray[trim].trim();
+		}
 		if (messageArray.length < 3)
 			{throw new RuntimeException("ERROR - message smaller than expected");}
 		else if (messageArray[2].equals("read-request"))
