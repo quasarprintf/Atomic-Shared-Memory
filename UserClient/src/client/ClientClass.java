@@ -6,12 +6,13 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.HashSet;
 import java.util.Iterator;
+import util.Message;
 
 public class ClientClass {
 	int pcid;	//save the pcid of the machine in the class
 	InetAddress[] addresses;	//list of server addresses. Can be modified with functions (WIP)
 	int port = 2000;	//port to use for everything
-	int seqID = 0;
+	int reqID = 0;
 	
 	ClientClass(int PCID, int PORT, InetAddress[] ADDRESSES)
 	{
@@ -22,27 +23,26 @@ public class ClientClass {
 	
 	public String read(String key) throws IOException
 	{
-		seqID++;
-		String[] value = readMessage(key);
-		writeMessage(key, value[2], Integer.parseInt(value[3]) + 1);
-		return value[2];
+		reqID++;
+		Message value = readMessage(key);
+		writeMessage(key, value.getValue(), value.getSeqID() + 1);
+		return value.getValue();
 	}
 	
 	public void write(String key, String value) throws IOException
 	{
-		seqID++;
-		String seqId = readMessage(key)[3];
-		seqId = seqId.trim();
-		writeMessage(key, value, Integer.parseInt(seqId) + 1);
+		reqID++;
+		Message seqID = readMessage(key);
+		writeMessage(key, value, seqID.getSeqID() + 1);
 	}
 	
-	private String[] readMessage(String key) throws IOException
+	private Message readMessage(String key) throws IOException
 	{
 		//send the request
 		DatagramPacket packet;
 		DatagramSocket socket = new DatagramSocket(port);
-		String message = "read-request:" + pcid + ":" + key;
-		byte[] messageBytes = message.getBytes();
+		Message message = new Message(reqID + ":" + "read-request:" + pcid + ":" + key);
+		byte[] messageBytes = message.formatMessage().getBytes();
 		packet = new DatagramPacket(messageBytes, messageBytes.length, addresses[0], port);
 		HashSet<InetAddress> resendSet = new HashSet<InetAddress>(addresses.length);
 		for (int i = 0; i < addresses.length; i++)
@@ -54,35 +54,35 @@ public class ClientClass {
 		
 		//wait for and read responses
 		socket.setSoTimeout(1000);	//TODO : get better timeout duration
-		String[] response = new String[4];
+		Message response;
 		String value = "0";
 		int maxSeq = -1;
 		int maxPc = -1;
-		
+
 		int i = 0;
 		while (i < (addresses.length / 2) + 1) //address.length / 2 is an int and should self-truncate
 		{
+			
 			packet = new DatagramPacket(new byte[1024], 1024);
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
 				catch (SocketTimeoutException e){}
 			if (packet.getData() != null)	//found a packet
 			{
-				response[0] = new String(packet.getData());
-				response = response[0].split(":");
-				for (int trim = 0; trim < 4; trim++)
+				response = new Message(String.valueOf((packet.getData())));
+				//TODO : validate  that the packet is indeed a response to this read and not a prior read/write
+				if (message.getReqID() == reqID)
 				{
-					response[trim] = response[trim].trim();
+					resendSet.remove(packet.getAddress());
+					//track most recent data
+					if (response.getSeqID() > maxSeq || (response.getSeqID() == maxSeq && response.getPcID() > maxPc))
+					{
+						value = new String(packet.getData());
+						maxSeq = response.getSeqID();
+						maxPc = response.getPcID();
+					}	
+					i++;
 				}
-				//TODO : validate somehow that the packet is indeed a response to this read and not a prior read/write
-				resendSet.remove(packet.getAddress());
-				//track most recent data
-				if (Integer.parseInt(response[3]) > maxSeq || (Integer.parseInt(response[3]) == maxSeq && Integer.parseInt(response[1]) > maxPc))
-				{
-					value = new String(packet.getData());
-					maxSeq = Integer.parseInt(response[3]);
-					maxPc = Integer.parseInt(response[1]);
-				}	
-				i++;
+				
 			}
 			else	//timed out without finding a packet, so retransmit to remaining servers
 			{
@@ -91,19 +91,17 @@ public class ClientClass {
 				{
 					try {packet = new DatagramPacket(messageBytes, messageBytes.length, resendIterator.next(), port);}
 						catch (RuntimeException e)
-						{throw new RuntimeException("ERROR - resendSet smaller than expected");}
+						{
+							socket.close();
+							throw new RuntimeException("ERROR - resendSet smaller than expected");
+						}
 					socket.send(packet);
 				}
 			}
-			
 		}
 		socket.close();
-		String[] returnString = value.split(":");
-		for (int trim = 0; trim < 4; trim++)
-		{
-			returnString[trim] = returnString[trim].trim();
-		}
-		return returnString;
+		Message returnMessage = new Message(value);
+		return returnMessage;
 	}
 	
 	public void writeMessage(String key, String value, int seqId) throws IOException
@@ -111,8 +109,8 @@ public class ClientClass {
 		//send the request
 		DatagramPacket packet;
 		DatagramSocket socket = new DatagramSocket(port);
-		String message = "write-request:" + pcid + ":" + key + ":" + value + ":" + seqId;	//TODO : figured out where seqId is supposed to come from
-		byte[] messageBytes = message.getBytes();
+		Message message = new Message(reqID + ":" + "write-request:" + pcid + ":" + seqId + ":" + key + ":" + value);
+		byte[] messageBytes = message.formatMessage().getBytes();
 		HashSet<InetAddress> resendSet = new HashSet<InetAddress>(addresses.length);
 		for (int i = 0; i < addresses.length; i++)
 		{
@@ -123,7 +121,7 @@ public class ClientClass {
 		
 		//wait for responses
 		socket.setSoTimeout(1000);	//TODO : get better timeout duration
-		String[] response = new String[4];
+		Message response;
 		
 		int i = 0;
 		while (i < (addresses.length / 2) + 1) //address.length / 2 is an int and should self-truncate
@@ -133,11 +131,13 @@ public class ClientClass {
 				catch (SocketTimeoutException e){}
 			if (packet.getData() != null)	//found a packet
 			{
-				response[0] = new String(packet.getData());
-				response = response[0].split(":");
-				//TODO : validate somehow that the packet is indeed a response to this write and not a prior read/write
-				resendSet.remove(packet.getAddress());
-				i++;
+				response = new Message(String.valueOf((packet.getData())));
+				if (response.getReqID() == reqID)
+				{
+					resendSet.remove(packet.getAddress());
+					i++;
+				}
+				
 			}
 			else	//timed out without finding a packet, so retransmit to remaining servers
 			{
@@ -146,7 +146,10 @@ public class ClientClass {
 				{
 					try {packet = new DatagramPacket(messageBytes, messageBytes.length, resendIterator.next(), port);}
 						catch (RuntimeException e)
-						{throw new RuntimeException("ERROR - resendSet smaller than expected");}
+						{
+							socket.close();
+							throw new RuntimeException("ERROR - resendSet smaller than expected");
+						}
 					socket.send(packet);
 				}
 			}
