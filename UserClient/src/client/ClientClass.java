@@ -1,4 +1,4 @@
-package Client;
+package client;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -11,6 +11,7 @@ public class ClientClass {
 	int pcid;	//save the pcid of the machine in the class
 	InetAddress[] addresses;	//list of server addresses. Can be modified with functions (WIP)
 	int port = 2000;	//port to use for everything
+	int seqID = 0;
 	
 	ClientClass(int PCID, int PORT, InetAddress[] ADDRESSES)
 	{
@@ -21,6 +22,7 @@ public class ClientClass {
 	
 	public String read(String key) throws IOException
 	{
+		seqID++;
 		String[] value = readMessage(key);
 		writeMessage(key, value[2], Integer.parseInt(value[3]) + 1);
 		return value[2];
@@ -28,6 +30,7 @@ public class ClientClass {
 	
 	public void write(String key, String value) throws IOException
 	{
+		seqID++;
 		String seqId = readMessage(key)[3];
 		seqId = seqId.trim();
 		writeMessage(key, value, Integer.parseInt(seqId) + 1);
@@ -61,7 +64,7 @@ public class ClientClass {
 		{
 			packet = new DatagramPacket(new byte[1024], 1024);
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
-			catch (SocketTimeoutException e){}
+				catch (SocketTimeoutException e){}
 			if (packet.getData() != null)	//found a packet
 			{
 				response[0] = new String(packet.getData());
@@ -87,7 +90,8 @@ public class ClientClass {
 				for (int j = 0; j < resendSet.size(); j++)
 				{
 					try {packet = new DatagramPacket(messageBytes, messageBytes.length, resendIterator.next(), port);}
-					finally {new RuntimeException("ERROR - resendSet smaller than expected");}
+						catch (RuntimeException e)
+						{throw new RuntimeException("ERROR - resendSet smaller than expected");}
 					socket.send(packet);
 				}
 			}
@@ -126,7 +130,7 @@ public class ClientClass {
 		{
 			packet = new DatagramPacket(new byte[0], 0);
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
-			catch (SocketTimeoutException e){}
+				catch (SocketTimeoutException e){}
 			if (packet.getData() != null)	//found a packet
 			{
 				response[0] = new String(packet.getData());
@@ -141,7 +145,8 @@ public class ClientClass {
 				for (int j = 0; j < resendSet.size(); j++)
 				{
 					try {packet = new DatagramPacket(messageBytes, messageBytes.length, resendIterator.next(), port);}
-					finally {new RuntimeException("ERROR - resendSet smaller than expected");}
+						catch (RuntimeException e)
+						{throw new RuntimeException("ERROR - resendSet smaller than expected");}
 					socket.send(packet);
 				}
 			}
