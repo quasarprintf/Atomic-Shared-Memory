@@ -1,14 +1,15 @@
 package client;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.HashSet;
 
 public class ClientTests {
 
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		InetAddress[] servers = new InetAddress[1];
-		servers[0] = InetAddress.getByName("67.221.92.26");
-		ClientClass messenger = new ClientClass(1, 2000, servers);
+		HashSet<InetAddress> servers = new HashSet<InetAddress>(1);
+		servers.add(InetAddress.getByName("67.221.92.26"));
+		ClientClass messenger = new ClientClass(1, 2000, 2000, 20, servers);
 		System.out.printf("starting test 1: write x = 1\n");
 		messenger.write("x", "1");
 		System.out.printf("test 1: done.\nStarting test 2: read x, should equal 1\n");
