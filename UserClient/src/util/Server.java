@@ -7,7 +7,7 @@ public class Server {
 	private InetAddress address;
 	private int port;
 	
-	Server(InetAddress ADDRESS, int PORT)
+	public Server(InetAddress ADDRESS, int PORT)
 	{
 		address = ADDRESS;
 		port = PORT;

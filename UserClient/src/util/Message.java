@@ -15,12 +15,12 @@ public class Message {
 		{messageArray[trim] = messageArray[trim].trim();
 		}
 		if (messageArray.length < 3)
-			{throw new RuntimeException("ERROR - message smaller than expected");}
-		else if (messageArray[2].equals("read-request"))
+			{throw new RuntimeException("ERROR - message smaller than expected " + messageString);}
+		else if (messageArray[1].equals("read-request"))
 			{buildReadRequest(messageArray);}
-		else if (messageArray[2].equals("read-return"))
+		else if (messageArray[1].equals("read-return"))
 			{buildReadReturn(messageArray);}
-		else if (messageArray[2].equals("write-request"))
+		else if (messageArray[1].equals("write-request"))
 			{buildWriteRequest(messageArray);}
 		else
 			{throw new RuntimeException("ERROR - message type unknown");}
@@ -138,14 +138,14 @@ public class Message {
 	
 	public String formatMessage() //returns a string with the message contents properly formatted
 	{
-		if (flag == "read-request")
+		if (flag.equals("read-request"))
 			{return formatReadRequest();}
-		else if (flag == "read-return")
+		else if (flag.equals("read-return"))
 			{return formatReadReturn();}
-		else if (flag == "write-request")
+		else if (flag.equals("write-request"))
 			{return formatWriteRequest();}
 		else
-			{throw new RuntimeException("ERROR - message type unknown");}
+			{throw new RuntimeException("ERROR - message type unknown: " + flag);}
 	}
 	
 	//formatMessage helpers
