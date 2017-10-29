@@ -11,18 +11,37 @@ public class Client extends Thread {
 	private int port;
 	private InetAddress[] addresses;
 	private int pcid;
-	public Client(int pcid, int port, InetAddress[] addresses) {
+	
+	/**
+	 * 
+	 * @param pcid
+	 * @param port
+	 * @param addresses	The String representations of the IPv4 addresses this client is meant to query
+	 */
+	public Client(int pcid, int port, String[] addresses) {
 		this.port = port;
-		this.addresses = addresses;
 		this.pcid = pcid;
 		
 		System.out.print("Client " + this.pcid + " created:"
 				+ "\n\t" + "Port: " + this.port
 				+ "\n\t" + "Addr:");
-		for (InetAddress addr : this.addresses)
-			System.out.print(" " + addr);
+		
+		
+		this.addresses = new InetAddress[addresses.length];
+		
+		for (int i = 0; i < addresses.length; i++) {
+			System.out.print(" " + addresses[i]);
+			try {
+				this.addresses[i] = InetAddress.getByName(addresses[i]);
+			} catch (UnknownHostException e) {
+				this.addresses[i] = null;
+				System.out.print(" (ERROR: Unknown Host Exception)");
+			}
+			
+		}
 		System.out.println();
 	}
+	
 	
 	public void run() {
 		int count = 0;
@@ -36,8 +55,14 @@ public class Client extends Thread {
 		}
 		
 	}
-	
+	/**
+	 * Sends a message to all addresses given to this client when it was initialized
+	 * @param message	The message to send; the local reqid appended to the front, delimited from the rest of
+	 * 					the message by a ":" character
+	 */
 	public void sendMessage(String message) {
+		// TODO sloppy fix; consider changing
+		message = this.reqid + ":" + message;
 		DatagramSocket socket;
 		for (InetAddress addr : this.addresses)
 			try {
@@ -53,5 +78,13 @@ public class Client extends Thread {
 				e.printStackTrace();
 			}
 		
+	}
+	
+	private int reqid = 0;
+	public String getReqId() {
+		return Integer.toHexString(reqid);
+	}
+	public void incReqId() {
+		this.reqid++;
 	}
 }
