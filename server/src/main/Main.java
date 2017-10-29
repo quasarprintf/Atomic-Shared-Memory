@@ -46,11 +46,12 @@ public class Main {
 
 		server = new MemoryDataServer(0, null, 2000, address);
 
-		server.start();
+		Thread serverThread = server.start();
 		
-		client0 = new Client(0, 2000, addresses);
+		
+		//client0 = new Client(0, 2000, addresses);
 		//client1 = new Client(1, 2000, addresses);
-		
+		/*
 		Scanner kbd = new Scanner(System.in);
 		String in;
 		
@@ -69,7 +70,12 @@ public class Main {
 		}
 		
 		kbd.close();
+		*/
 		
+		
+		
+
+		serverThread.join();
 		server.close();
 
 	}

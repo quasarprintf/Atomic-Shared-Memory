@@ -75,12 +75,13 @@ public abstract class DataServer {
 	 * 
 	 * TODO change this if the method of receiving messages changes
 	 */
-	public void start() {
+	public Thread start() {
 		
 		
 		
 		MessageListenerThread thread = new SocketListenerThread(this, this.soc, DataServer.REFRESH);
 		thread.start();
+		return thread;
 		
 	}
 
