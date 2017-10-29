@@ -28,19 +28,19 @@ public class Main {
 		String address = "10.66.117.76";
 
 		MemoryDataServer server;
-		//String[] addresses;
-		//Client client0, client1;
+		String[] addresses;
+		Client client0, client1;
 		
 		if (args.length == 0) {
 
-			//addresses = new String[] {
-				//	address
-			//};
+			addresses = new String[] {
+					address
+			};
 			
 		}
 		else {
 			address = args[0];
-		//	addresses = args[1].split(":");
+			addresses = args[1].split(":");
 			
 		}
 
@@ -48,9 +48,9 @@ public class Main {
 
 		server.start();
 		
-		//client0 = new Client(0, 2000, addresses);
+		client0 = new Client(0, 2000, addresses);
 		//client1 = new Client(1, 2000, addresses);
-		/*
+		
 		Scanner kbd = new Scanner(System.in);
 		String in;
 		
@@ -69,7 +69,7 @@ public class Main {
 		}
 		
 		kbd.close();
-		*/
+		
 		server.close();
 
 	}
