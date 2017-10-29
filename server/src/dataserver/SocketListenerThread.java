@@ -7,7 +7,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 import util.Address;
-import util.Message;
+import util.messages.Message;
 
 
 /**

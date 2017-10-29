@@ -3,8 +3,7 @@ package dataserver;
 import java.util.HashMap;
 
 import util.Address;
-import util.Message;
-import util.SystemPrinter;
+import util.messages.Message;
 
 /**
  * A subclass of DataServer.
@@ -17,6 +16,7 @@ import util.SystemPrinter;
  */
 public class MemoryDataServer extends DataServer {
 
+	
 	
 	/**
 	 * The map that stores all data associated with keys put in this object
@@ -35,8 +35,8 @@ public class MemoryDataServer extends DataServer {
 	 * @param ADDRESSES	The other servers in the network; this object is stored as a volatile array and can be updated
 	 * @param port	The port at the local address that this object should listen to for UDP messages
 	 */
-	public MemoryDataServer(int serverid, Address[] ADDRESSES, int port) {
-		super(serverid, ADDRESSES, port);
+	public MemoryDataServer(int serverid, Address[] ADDRESSES, int port, String address) {
+		super(serverid, ADDRESSES, port, address);
 	}
 
 	
@@ -46,7 +46,11 @@ public class MemoryDataServer extends DataServer {
 			int localStamp = Integer.parseInt(this.TIME.get(key), 16);
 			int newStamp = Integer.parseInt(timestamp, 16);
 			
+			System.out.println("localStamp: " + localStamp);
+			System.out.println("newStamp: " + newStamp);
+			
 			if (localStamp < newStamp) { // if the local stamp is older than the new stamp, we update
+				//System.out.println("We're updating!");
 				this.TIME.put(key, timestamp);
 				this.DATA.put(key, value);
 			}
@@ -57,7 +61,12 @@ public class MemoryDataServer extends DataServer {
 		}
 		
 		// no matter what, send a receipt
-		this.send(new Message(new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), returnAddress, "write-receipt:" +this.id + ":" + key + ":" + value + ":" + timestamp));
+		Message message = new Message(
+				new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), 
+				returnAddress, 
+				DataServer.WRITE_RECEIPT_FLAG + ":" + this.id + ":" + key + ":" + value + ":" + timestamp);
+		
+		this.send(message);
 		
 		
 		
