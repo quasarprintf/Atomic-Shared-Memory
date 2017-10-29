@@ -1,6 +1,6 @@
 package dataserver;
 
-import util.Message;
+import util.messages.Message;
 
 /**
  * This class is the parent class for all objects that listen for incoming messages.

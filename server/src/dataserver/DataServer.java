@@ -8,7 +8,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import util.Address;
-import util.Message;
+import util.messages.*;
 
 /**
  * This is the abstract object that outlines what a DataServer might look like. The abstract portion of this object is
@@ -23,6 +23,8 @@ import util.Message;
  */
 public abstract class DataServer {
 
+	protected final static String WRITE_RECEIPT_FLAG = "write-receipt";
+	
 	/**
 	 * This is the list of other data servers in the network
 	 */
@@ -40,7 +42,7 @@ public abstract class DataServer {
 	 * @param ADDRESSES	The other servers in the network; this object is stored as a volatile array and can be updated
 	 * @param port	The port at the local address that this object should listen to for UDP messages
 	 */
-	public DataServer(int serverid, Address[] ADDRESSES, int port) {
+	public DataServer(int serverid, Address[] ADDRESSES, int port, String address) {
 
 		this.id = serverid;
 		this.port = port;
@@ -48,7 +50,7 @@ public abstract class DataServer {
 		
 		try {
 			this.ADDRESSES = ADDRESSES;
-			this.soc = new DatagramSocket(port, InetAddress.getLocalHost());
+			this.soc = new DatagramSocket(port, InetAddress.getByName(address));
 			System.out.println("Data Server " + this.id + " created: "
 					+ "\n\t" + "Port: " + this.soc.getLocalPort()
 					+ "\n\t" + "Addr: " + this.soc.getLocalAddress());
@@ -77,7 +79,7 @@ public abstract class DataServer {
 		
 		
 		
-		MessageListenerThread thread = new SocketListenerThread(this, this.soc, this.REFRESH);
+		MessageListenerThread thread = new SocketListenerThread(this, this.soc, DataServer.REFRESH);
 		thread.start();
 		
 	}
@@ -88,10 +90,10 @@ public abstract class DataServer {
 	
 	/**
 	 * 
-	 * @param key
-	 * @param value
-	 * @param timestamp
-	 * @param returnAddress
+	 * @param key	The key of the key value pair
+	 * @param value	The value of the key value pair
+	 * @param timestamp	The timestamp showing the freshness of this value
+	 * @param returnAddress	The IP/port combination this message came from; used for sending receipts
 	 */
 	protected abstract void write(String key, String value, String timestamp, Address returnAddress);
 	
@@ -101,6 +103,7 @@ public abstract class DataServer {
 	 * @param message The message to be sent
 	 */
 	protected void send(Message message) {
+		System.out.println("Sending to\t" + message.recipient().addr() + "\t:\t" + message.toString());
 		try {
 			Address recip = message.recipient();
 			this.soc.send(new DatagramPacket(message.toString().getBytes(), message.toString().getBytes().length, recip.addr(), recip.port()));
@@ -110,6 +113,10 @@ public abstract class DataServer {
 			
 			e.printStackTrace();
 		}
+	}
+	
+	public void close() {
+		this.soc.close();
 	}
 
 
