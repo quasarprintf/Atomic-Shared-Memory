@@ -43,8 +43,8 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
-		value = messageArray[3];
-		seqID = Integer.parseInt(messageArray[4]);
+		seqID = Integer.parseInt(messageArray[3]);
+		value = messageArray[4];
 	}
 	
 	private void buildWriteRequest(String[] messageArray)
@@ -52,9 +52,10 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
-		key = messageArray[3];
-		value = messageArray[4];
-		seqID = Integer.parseInt(messageArray[5]);
+		seqID = Integer.parseInt(messageArray[3]);
+		key = messageArray[4];
+		value = messageArray[5];
+
 	}
 	
 	

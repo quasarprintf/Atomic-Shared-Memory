@@ -90,7 +90,7 @@ public class DynamicRuntimeTests {
 		}
 	}
 	
-	private static void removeServer(String[] input)			//"add" "server" *clientName* *serverName*
+	private static void removeServer(String[] input)			//"remove" "server" *clientName* *serverName*
 	{
 		try
 		{
@@ -118,7 +118,7 @@ public class DynamicRuntimeTests {
 		}
 	}
 	
-	private static void write(String[] input)			//"read" *clientName* *key* *value*
+	private static void write(String[] input)			//"write" *clientName* *key* *value*
 	{
 		try
 		{
@@ -132,7 +132,20 @@ public class DynamicRuntimeTests {
 		}
 	}
 	
-	public static void main(String[] args) throws UnknownHostException 
+	/*
+	   To create a client: 				"new" "client" *clientName* *pcId* *port* *serverSet*
+	   To create a server: 				"new" "server" *serverName* *IpAddress* *port*
+	   To create a serverSet: 			"new" "serverset" *serversetName*
+	   To add a server to a serverSet: 	"add" "serverSet" *serverSetName* *server*
+	   To add a server to a client:		"add" "server" *clientName* *serverName*
+	   To remove a server from a client:"remove" "server" *clientName* *serverName*
+	   To read:							"read" *clientName* *key*
+	   To write:						"write" *clientName* *key* *value*
+	   To exit:							"end"
+	 */
+	
+	
+	public static void runDynamicTests() throws UnknownHostException 
 	{
 		Scanner input = new Scanner(System.in);
 		String command;

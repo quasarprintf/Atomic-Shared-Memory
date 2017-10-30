@@ -5,6 +5,8 @@ import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 import java.util.HashSet;
 import java.util.Iterator;
+
+import util.ByteArray;
 import util.Message;
 import util.Server;
 
@@ -46,6 +48,7 @@ public class Client {
 		}
 	}
 	
+	//the public read command that gets a value from the servers
 	public String read(String key) throws IOException
 	{
 		reqID++;
@@ -54,6 +57,7 @@ public class Client {
 		return value.getValue();
 	}
 	
+	//the public write command that writes a value to the servers
 	public void write(String key, String value) throws IOException
 	{
 		reqID++;
@@ -61,6 +65,7 @@ public class Client {
 		writeMessage(key, value, seqID.getSeqID() + 1);
 	}
 	
+	//specifically reads from the servers. Used privately by both the read and write functions
 	private Message readMessage(String key) throws IOException
 	{
 		//send the request
@@ -93,12 +98,16 @@ public class Client {
 			
 			packet = new DatagramPacket(new byte[1024], 1024);
 			timeout = false;
+			System.out.printf("about to wait for responses to a read\n");
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
 				catch (SocketTimeoutException e)
-					{timeout = true;}
+					{
+						timeout = true;
+						System.out.printf("timed out while waiting for responses to a read\n");
+					}
 			if (!timeout)	//found a packet
 			{
-				response = new Message(String.valueOf(packet.getData()));
+				response = new Message(ByteArray.parseToString(packet.getData()));
 				//validate  that the packet is indeed a response to this read and not a prior read/write
 				if (message.getReqID() == reqID)
 				{
@@ -106,7 +115,7 @@ public class Client {
 					//track most recent data
 					if (response.getSeqID() > maxSeq || (response.getSeqID() == maxSeq && response.getPcID() > maxPc))
 					{
-						value = new String(packet.getData());
+						value = ByteArray.parseToString(packet.getData());
 						maxSeq = response.getSeqID();
 						maxPc = response.getPcID();
 					}	
@@ -135,7 +144,8 @@ public class Client {
 		return returnMessage;
 	}
 	
-	public void writeMessage(String key, String value, int seqId) throws IOException
+	//specifically writes to the servers. Used privately by both the read and write functions
+	private void writeMessage(String key, String value, int seqId) throws IOException
 	{
 		//send the request
 		DatagramPacket packet;
@@ -165,7 +175,7 @@ public class Client {
 				catch (SocketTimeoutException e){}
 			if (packet.getData() != null)	//found a packet
 			{
-				response = new Message(String.valueOf((packet.getData())));
+				response = new Message(ByteArray.parseToString(packet.getData()));
 				if (response.getReqID() == reqID)
 				{
 					resendSet.remove(packet.getAddress());
