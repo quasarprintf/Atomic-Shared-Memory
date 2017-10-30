@@ -2,16 +2,19 @@
 
 ### Server-Client communication
     The messages sent over the network from client to server will be formatted as follows: (without angled brackets)
-        "read" request    : <flag>:<pcid>:<key>
+        "read" request    : <reqid>:<flag>:<pcid>:<key>
+          * reqid : the hexadecimal local timestamp of the client that sent the request to keep track of which requests are outdated stored
           * flag  : the String value showing message type; this would be "read-request"
           * pcid  : the 8 bit hexidecimal id of the machine that sent the message (the client machine); higher value takes priority in ties
           * key   : the String identifier used to find the information the client is looking for
-        "read" returns    : <flag>:<pcid>:<val>:<seqid>
+        "read" returns    : <reqid>:<flag>:<pcid>:<seqid>:<val>
+          * reqid : the hexadecimal local timestamp of the client that sent the request to keep track of which requests are outdated
           * flag  : the String showing message type; this would be "read-return"
           * pcid  : the 8 bit hexadecimal id of the machine that sent the message (the server machine); higher value takes priority in ties
           * val   : the String value to be returned
           * seqid : the 8 bit hexadecimal value that identifies how fresh this value is; where higher values are fresher
-        "write" request   : <flag>:<pcid>:<key>:<val>:<seqid>
+        "write" request   : <reqid>:<flag>:<pcid>:<seqid>:<key>:<val>:
+          * reqid : the hexadecimal local timestamp of the client that sent the request to keep track of which requests are outdated
           * flag  : the String showing message type; this would be "write-request"
           * pcid  : the 8 bit hexadecimal id of the machine that sent the message (the client machine); higher value takes priority in ties
           * key   : the id of where <val> will be written
