@@ -20,6 +20,13 @@
           * key   : the id of where <val> will be written
           * val   : the String value to be written
           * seqid : the 8 bit hexadecimal value that identifies how fresh this value is; higher values are fresher
+          
+          "write" return  : <reqid>:<flag>:<pcid>:<key>
+          * reqid : the hexadecimal local timestamp of the client that sent the request to keep track of which requests are outdated
+          * flag  : the String showing message type; this would be "write-return"
+          * pcid  : the 8 bit hexadecimal id of the machine that sent the message (the client machine); higher value takes priority in ties
+          * key   : the id of where <val> will be written
+          
         
     Note that the order of this message is important. If we have a "write" operation, then we know that <val> is a key/value pair.
     If we have a "read" operation, then we know that <val> has only a key and not key/value pair.  We also know that we will not have a
