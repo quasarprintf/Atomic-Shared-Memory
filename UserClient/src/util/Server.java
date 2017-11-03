@@ -11,7 +11,6 @@ public class Server {
 	{
 		address = ADDRESS;
 		port = PORT;
-		System.out.printf("server created with address %s\n", address.getHostAddress());
 	}
 	
 	

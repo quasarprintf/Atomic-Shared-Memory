@@ -85,12 +85,15 @@ public class Client {
 		}
 		
 		//wait for and read responses
-		socket.setSoTimeout(10000);	//TODO : get better timeout duration
+		socket.setSoTimeout(5000);	//TODO : get better timeout duration
 		Message response;
 		String value = "0";
 		int maxSeq = -1;
 		int maxPc = -1;
 		boolean timeout = false;
+		Server receivedServer;
+		Server checkServer;
+		Iterator<Server> removeIterator;
 
 		int i = 0;
 		while (i < (servers.size() / 2) + 1) //address.length / 2 is an int and should self-truncate
@@ -108,10 +111,26 @@ public class Client {
 			if (!timeout)	//found a packet
 			{
 				response = new Message(ByteArray.parseToString(packet.getData()));
+				System.out.printf("got a response\n");
 				//validate  that the packet is indeed a response to this read and not a prior read/write
 				if (message.getReqID() == reqID)
 				{
-					resendSet.remove(packet.getAddress());
+					System.out.printf("response was good\n");
+					
+					//TODO: MAKE THIS NOT HORRIBLE
+					receivedServer = new Server(packet.getAddress(), packet.getPort());
+					removeIterator = servers.iterator();
+					
+					while (removeIterator.hasNext())
+					{
+						checkServer = removeIterator.next();
+						if (checkServer.equals(receivedServer))
+						{
+							resendSet.remove(checkServer);
+							break;
+						}
+					}
+					
 					//track most recent data
 					if (response.getSeqID() > maxSeq || (response.getSeqID() == maxSeq && response.getPcID() > maxPc))
 					{
@@ -120,6 +139,10 @@ public class Client {
 						maxPc = response.getPcID();
 					}	
 					i++;
+				}
+				else
+				{
+					System.out.printf("response was bad");
 				}
 				
 			}
@@ -164,21 +187,46 @@ public class Client {
 		}
 		
 		//wait for responses
-		socket.setSoTimeout(1000);	//TODO : get better timeout duration
+		socket.setSoTimeout(5000);	//TODO : get better timeout duration
 		Message response;
+		boolean timeout = false;
+		Server receivedServer;
+		Server checkServer;
+		Iterator<Server> removeIterator;
 		
 		int i = 0;
 		while (i < (servers.size() / 2) + 1) //address.length / 2 is an int and should self-truncate
 		{
-			packet = new DatagramPacket(new byte[0], 0);
+			packet = new DatagramPacket(new byte[1024], 1024);
+			timeout = false;
+			System.out.printf("about to wait for responses to a write\n");
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
-				catch (SocketTimeoutException e){}
-			if (packet.getData() != null)	//found a packet
+				catch (SocketTimeoutException e)
+				{
+					timeout = true;
+				}
+			if (!timeout)	//found a packet
 			{
 				response = new Message(ByteArray.parseToString(packet.getData()));
 				if (response.getReqID() == reqID)
 				{
-					resendSet.remove(packet.getAddress());
+					System.out.printf("got a response\n");
+					
+					//TODO: MAKE THIS NOT HORRIBLE
+					receivedServer = new Server(packet.getAddress(), packet.getPort());
+					removeIterator = servers.iterator();
+					
+					while (removeIterator.hasNext())
+					{
+						checkServer = removeIterator.next();
+						if (checkServer.equals(receivedServer))
+						{
+							resendSet.remove(checkServer);
+							break;
+						}
+					}
+					
+
 					i++;
 				}
 				
