@@ -22,8 +22,13 @@ public class Message {
 			{buildReadReturn(messageArray);}
 		else if (messageArray[1].equals("write-request"))
 			{buildWriteRequest(messageArray);}
+		else if (messageArray[1].equals("write-return"))
+			{buildWriteReturn(messageArray);}
 		else
-			{throw new RuntimeException("ERROR - message type unknown");}
+		{
+			System.out.printf("Message was %s\n", messageString);
+			throw new RuntimeException("ERROR - message type unknown");
+		}
 		
 	}
 	
@@ -43,8 +48,8 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
-		value = messageArray[3];
-		seqID = Integer.parseInt(messageArray[4]);
+		seqID = Integer.parseInt(messageArray[3]);
+		value = messageArray[4];
 	}
 	
 	private void buildWriteRequest(String[] messageArray)
@@ -52,9 +57,17 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
+		seqID = Integer.parseInt(messageArray[3]);
+		key = messageArray[4];
+		value = messageArray[5];
+	}
+	
+	private void buildWriteReturn(String[] messageArray)
+	{
+		reqID = Integer.parseInt(messageArray[0]);
+		flag = messageArray[1];
+		pcID = Integer.parseInt(messageArray[2]);
 		key = messageArray[3];
-		value = messageArray[4];
-		seqID = Integer.parseInt(messageArray[5]);
 	}
 	
 	
@@ -144,6 +157,8 @@ public class Message {
 			{return formatReadReturn();}
 		else if (flag.equals("write-request"))
 			{return formatWriteRequest();}
+		else if (flag.equals("write-return"))
+			{return formatWriteReturn();}
 		else
 			{throw new RuntimeException("ERROR - message type unknown: " + flag);}
 	}
@@ -163,6 +178,11 @@ public class Message {
 	private String formatWriteRequest()
 	{
 		return reqID + ":" + flag + ":" + String.valueOf(pcID) + ":" + String.valueOf(seqID) + ":" + key + ":" + value;
+	}
+	
+	private String formatWriteReturn()
+	{
+		return reqID + ":" + flag + ":" + String.valueOf(pcID) + ":" + key;
 	}
 	
 }
