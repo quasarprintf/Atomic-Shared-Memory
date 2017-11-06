@@ -15,6 +15,8 @@ public class Message {
 	String message;
 	Address sender, recipient;
 	public Message(Address sender, Address recipient, String ... messageParts) {
+		
+		
 		this.sender = sender;
 		this.recipient = recipient;
 		this.parts = messageParts;
@@ -41,7 +43,7 @@ public class Message {
 	}
 	
 	protected String get(int index) {
-		if (index > this.parts.length || index < 0)
+		if (index >= this.parts.length || index < 0)
 			return null;
 		else
 			return this.parts[index];
@@ -67,6 +69,15 @@ public class Message {
 	}
 	
 	public static Message construct(Address recipient, Address sender, String message) {
-		return new Message(recipient, sender, message);
+		Message out = new Message(recipient, sender, message);
+		String flag = out.getFlag();
+		if (flag == null) 
+			return out;
+		else if (flag.equals("read-request"))
+			return new ReadRequestMessage(recipient, sender, message);
+		else if (flag.equals("write-request"))
+			return new WriteRequestMessage(recipient, sender, message);
+		else
+			return out;
 	}
 }

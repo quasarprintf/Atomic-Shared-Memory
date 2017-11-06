@@ -23,7 +23,6 @@ public class MessageParser {
 	 */
 	protected void parse(Message message) {
 		System.out.println("message from\t" + message.sender().addr() + "\t:\t" + message);
-		
 		String flag = message.getFlag();
 		// Pings another server; used for testing
 		// TODO	deprecate this
@@ -34,12 +33,15 @@ public class MessageParser {
 					((WriteRequestMessage) message).getKey(), 
 					((WriteRequestMessage) message).getVal(), 
 					((WriteRequestMessage) message).getSeqId() + "", 
-					message.sender());
+					((WriteRequestMessage) message).sender(),
+					((WriteRequestMessage) message).getReqID() + "");
 		}
 		else if (message instanceof ReadRequestMessage) {
 			this.server.read(
 					((ReadRequestMessage) message).getKey(), 
-					message.sender());
+					((ReadRequestMessage) message).sender(),
+					((ReadRequestMessage) message).getReqID() + "");
+			
 		}
 		
 		// Test Cases

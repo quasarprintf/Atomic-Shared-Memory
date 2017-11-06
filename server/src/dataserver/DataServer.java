@@ -1,6 +1,7 @@
 package dataserver;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -23,12 +24,15 @@ import util.messages.*;
  */
 public abstract class DataServer {
 
-	protected final static String WRITE_RECEIPT_FLAG = "write-receipt";
+	protected final static String 
+		WRITE_RECEIPT_FLAG = "write-return",
+		WRITE_REQUEST_FLAG = "write-request",
+		READ_RECEIPT_FLAG = "read-return",
+		READ_REQUEST_FLAG = "read-request";
 	
 	/**
 	 * This is the list of other data servers in the network
 	 */
-	private volatile Address[] ADDRESSES;
 	public final int port, id;
 	
 	protected int seqcount = 0;
@@ -42,21 +46,18 @@ public abstract class DataServer {
 	 * @param ADDRESSES	The other servers in the network; this object is stored as a volatile array and can be updated
 	 * @param port	The port at the local address that this object should listen to for UDP messages
 	 */
-	public DataServer(int serverid, Address[] ADDRESSES, int port, String address) {
+	public DataServer(int serverid, int port, String address) throws SocketException {
 
 		this.id = serverid;
 		this.port = port;
 		
 		
 		try {
-			this.ADDRESSES = ADDRESSES;
 			this.soc = new DatagramSocket(port, InetAddress.getByName(address));
 			System.out.println("Data Server " + this.id + " created: "
 					+ "\n\t" + "Port: " + this.soc.getLocalPort()
 					+ "\n\t" + "Addr: " + this.soc.getLocalAddress());
 
-		} catch (SocketException e) {
-			e.printStackTrace();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -75,7 +76,7 @@ public abstract class DataServer {
 	 * 
 	 * TODO change this if the method of receiving messages changes
 	 */
-	public Thread start() {
+	public Thread start() throws BindException {
 		
 		
 		
@@ -86,7 +87,7 @@ public abstract class DataServer {
 	}
 
 	
-	protected abstract void read(String key, Address returnAddress);
+	protected abstract void read(String key, Address returnAddress, String reqid);
 	
 	
 	/**
@@ -96,7 +97,7 @@ public abstract class DataServer {
 	 * @param timestamp	The timestamp showing the freshness of this value
 	 * @param returnAddress	The IP/port combination this message came from; used for sending receipts
 	 */
-	protected abstract void write(String key, String value, String timestamp, Address returnAddress);
+	protected abstract void write(String key, String value, String timestamp, Address returnAddress, String reqid);
 	
 	
 	/**
