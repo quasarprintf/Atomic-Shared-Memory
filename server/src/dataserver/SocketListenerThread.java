@@ -64,7 +64,7 @@ public class SocketListenerThread extends MessageListenerThread {
 					if (b != 0)
 						s = s + (char) b;
 
-				return new Message(new Address(packet.getAddress(), packet.getPort()), localAddress, s.trim());
+				return Message.construct(new Address(packet.getAddress(), packet.getPort()), localAddress, s.trim());
 			}
 
 		} catch (SocketTimeoutException toe) {

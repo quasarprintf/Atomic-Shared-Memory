@@ -1,9 +1,12 @@
 package main;
 
 import java.io.IOException;
+import java.net.BindException;
+import java.net.SocketException;
 import java.util.Scanner;
 
 import client.Client;
+import dataserver.DataServer;
 import dataserver.MemoryDataServer;
 
 /**
@@ -21,32 +24,27 @@ import dataserver.MemoryDataServer;
  *
  */
 public class Main {
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) {
 		
 		// address the developer last had on their machine so they could run the project from the IDE and not
 		// the terminal
-		String address = "10.66.117.76";
-
-		MemoryDataServer server;
-		String[] addresses;
-		Client client0, client1;
+		
+		String address = "137.99.128.56";
+		int port = 2000;
+		
 		
 		if (args.length == 0) {
 
-			addresses = new String[] {
-					address
-			};
-			
+				
 		}
 		else {
 			address = args[0];
-			addresses = args[1].split(":");
-			
+			port = Integer.parseInt(args[1]);
 		}
 
-		server = new MemoryDataServer(0, null, 2000, address);
 
-		Thread serverThread = server.start();
+		
+		process(address, port);
 		
 		
 		//client0 = new Client(0, 2000, addresses);
@@ -75,9 +73,23 @@ public class Main {
 		
 		
 
-		serverThread.join();
-		server.close();
 
+	}
+	
+	public static void process(String address, int port) {
+		
+		MemoryDataServer server;
+		try {
+			server = new MemoryDataServer(0, port, address);
+			Thread serverThread = server.start();
+			serverThread.join();
+			server.close();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SocketException e) {
+			process(address, port + 1);
+		}
 	}
 	
 	

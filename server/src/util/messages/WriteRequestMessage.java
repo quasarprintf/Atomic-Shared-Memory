@@ -3,6 +3,7 @@ package util.messages;
 import util.Address;
 
 public class WriteRequestMessage extends Message {
+	
 	public WriteRequestMessage(Address recipient, Address sender, String message) {
 		super(recipient, sender, message);
 	}

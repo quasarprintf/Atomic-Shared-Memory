@@ -1,9 +1,11 @@
 package dataserver;
 
+import java.net.SocketException;
 import java.util.HashMap;
 
 import util.Address;
-import util.messages.Message;
+import util.messages.ReadReturnMessage;
+import util.messages.WriteReturnMessage;
 
 /**
  * A subclass of DataServer.
@@ -35,19 +37,16 @@ public class MemoryDataServer extends DataServer {
 	 * @param ADDRESSES	The other servers in the network; this object is stored as a volatile array and can be updated
 	 * @param port	The port at the local address that this object should listen to for UDP messages
 	 */
-	public MemoryDataServer(int serverid, Address[] ADDRESSES, int port, String address) {
-		super(serverid, ADDRESSES, port, address);
+	public MemoryDataServer(int serverid, int port, String address) throws SocketException {
+		super(serverid, port, address);
 	}
 
 	
-	protected void write(String key, String value, String timestamp, Address returnAddress) {
+	protected void write(String key, String value, String timestamp, Address returnAddress, String reqid) {
 		
 		if (this.DATA.containsKey(key)) {
 			int localStamp = Integer.parseInt(this.TIME.get(key), 16);
 			int newStamp = Integer.parseInt(timestamp, 16);
-			
-			System.out.println("localStamp: " + localStamp);
-			System.out.println("newStamp: " + newStamp);
 			
 			if (localStamp < newStamp) { // if the local stamp is older than the new stamp, we update
 				//System.out.println("We're updating!");
@@ -61,10 +60,13 @@ public class MemoryDataServer extends DataServer {
 		}
 		
 		// no matter what, send a receipt
-		Message message = new Message(
+		WriteReturnMessage message = new WriteReturnMessage(
 				new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), 
 				returnAddress, 
-				DataServer.WRITE_RECEIPT_FLAG + ":" + this.id + ":" + key + ":" + value + ":" + timestamp);
+				reqid, 
+				DataServer.WRITE_RECEIPT_FLAG,
+				this.id + "",
+				key);
 		
 		this.send(message);
 		
@@ -73,16 +75,16 @@ public class MemoryDataServer extends DataServer {
 	}
 
 	@Override
-	protected void read(String key, Address returnAddress) {
+	protected void read(String key, Address returnAddress, String reqid) {
 		String value = this.DATA.get(key);
 		String timestamp = this.TIME.get(key);
 		
 		if (value == null && timestamp == null)
-			this.send(new Message(new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), returnAddress, "read-return:" + this.id + ":" + "null" + ":" + "-1"));
+			this.send(new ReadReturnMessage(new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), returnAddress, reqid, "read-return", this.id + "", "-1", "null"));
 		else if (value == null || timestamp == null)
-			this.send(new Message(new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), returnAddress, "read-return:" + this.id + ":" + "data-sync-err" + ":" + "-1"));
+			this.send(new ReadReturnMessage(new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), returnAddress, reqid, "read-return", this.id + "",  "-1", "data-sync-error"));
 		else {
-			this.send(new Message(new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), returnAddress, "read-return:" + this.id + ":" + value + ":" + timestamp));
+			this.send(new ReadReturnMessage(new Address(this.soc.getLocalAddress(), this.soc.getLocalPort()), returnAddress, reqid, "read-return", this.id + "", timestamp, value));
 		}
 	}
 	
