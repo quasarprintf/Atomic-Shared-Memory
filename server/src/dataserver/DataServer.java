@@ -28,7 +28,11 @@ public abstract class DataServer {
 		WRITE_RECEIPT_FLAG = "write-return",
 		WRITE_REQUEST_FLAG = "write-request",
 		READ_RECEIPT_FLAG = "read-return",
-		READ_REQUEST_FLAG = "read-request";
+		READ_REQUEST_FLAG = "read-request",
+		WAIT_COMMAND_FLAG = "wait",
+		WAKE_COMMAND_FLAG = "wake";
+	
+	protected boolean awake = true;
 	
 	/**
 	 * This is the list of other data servers in the network
@@ -121,7 +125,12 @@ public abstract class DataServer {
 		this.soc.close();
 	}
 
-
+	public void sleep() {
+		this.awake = false;
+	}
+	public void wake() {
+		this.awake = true;
+	}
 
 
 	

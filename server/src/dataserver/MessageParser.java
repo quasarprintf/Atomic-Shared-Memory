@@ -22,6 +22,18 @@ public class MessageParser {
 	 * @param message
 	 */
 	protected void parse(Message message) {
+		
+		// CHECK TO SEE IF WE'RE ASLEEP
+		if (!this.server.awake) {
+			if (message.getFlag().equals("wake"))
+				this.server.wake();
+			return;
+		}
+		
+		
+		
+		
+		
 		System.out.println("message from\t" + message.sender().addr() + "\t:\t" + message);
 		String flag = message.getFlag();
 		// Pings another server; used for testing
@@ -55,6 +67,10 @@ public class MessageParser {
 					message.recipient(), 
 					message.sender(),  
 					message.toString()));
+		
+		// Sleep functions
+		else if (flag.equals("wait"))
+			this.server.sleep();
 		
 		// TODO more if statements... or case? whatever
 		
