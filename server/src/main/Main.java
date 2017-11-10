@@ -29,7 +29,7 @@ public class Main {
 		// address the developer last had on their machine so they could run the project from the IDE and not
 		// the terminal
 		
-		String address = "137.99.128.56";
+		String address = "localhost";
 		int port = 2000;
 		
 		

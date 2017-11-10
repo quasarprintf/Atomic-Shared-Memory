@@ -86,84 +86,8 @@ public class Client {
 		
 		//wait for and read responses
 		socket.setSoTimeout(5000);	//TODO : get better timeout duration
-		Message response;
-		String value = "0";
-		int maxSeq = -1;
-		int maxPc = -1;
-		boolean timeout = false;
-		Server receivedServer;
-		Server checkServer;
-		Iterator<Server> removeIterator;
-
-		int i = 0;
-		while (i < (servers.size() / 2) + 1) //address.length / 2 is an int and should self-truncate
-		{
-			
-			packet = new DatagramPacket(new byte[1024], 1024);
-			timeout = false;
-			System.out.printf("about to wait for responses to a read\n");
-			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
-				catch (SocketTimeoutException e)
-					{
-						timeout = true;
-						System.out.printf("timed out while waiting for responses to a read\n");
-					}
-			if (!timeout)	//found a packet
-			{
-				response = new Message(ByteArray.parseToString(packet.getData()));
-				System.out.printf("got a response\n");
-				//validate  that the packet is indeed a response to this read and not a prior read/write
-				if (message.getReqID() == reqID)
-				{
-					System.out.printf("response was good\n");
-					
-					//TODO: MAKE THIS NOT HORRIBLE
-					receivedServer = new Server(packet.getAddress(), packet.getPort());
-					removeIterator = servers.iterator();
-					
-					while (removeIterator.hasNext())
-					{
-						checkServer = removeIterator.next();
-						if (checkServer.equals(receivedServer))
-						{
-							resendSet.remove(checkServer);
-							break;
-						}
-					}
-					
-					//track most recent data
-					if (response.getSeqID() > maxSeq || (response.getSeqID() == maxSeq && response.getPcID() > maxPc))
-					{
-						value = ByteArray.parseToString(packet.getData());
-						maxSeq = response.getSeqID();
-						maxPc = response.getPcID();
-					}	
-					i++;
-				}
-				else
-				{
-					System.out.printf("response was bad");
-				}
-				
-			}
-			else	//timed out without finding a packet, so retransmit to remaining servers
-			{
-				Iterator<Server> resendIterator = resendSet.iterator();
-				while (resendIterator.hasNext())
-				{
-					destinationServer = resendIterator.next();
-					try {packet = new DatagramPacket(messageBytes, messageBytes.length, destinationServer.getAddress(), destinationServer.getPort());}
-						catch (RuntimeException e)
-						{
-							socket.close();
-							throw new RuntimeException("ERROR - resendSet smaller than expected");
-						}
-					socket.send(packet);
-				}
-			}
-		}
+		Message returnMessage = getResponses(socket, resendSet, messageBytes, true);
 		socket.close();
-		Message returnMessage = new Message(value);
 		return returnMessage;
 	}
 	
@@ -188,13 +112,22 @@ public class Client {
 		
 		//wait for responses
 		socket.setSoTimeout(5000);	//TODO : get better timeout duration
-		Message response;
+		getResponses(socket, resendSet, messageBytes, false);
+		socket.close();
+	}
+	
+	private Message getResponses(DatagramSocket socket, HashSet<Server> resendSet, byte[] messageBytes, boolean reading) throws IOException
+	{
+		int i = 0;
 		boolean timeout = false;
 		Server receivedServer;
 		Server checkServer;
 		Iterator<Server> removeIterator;
+		Message response;
+		DatagramPacket packet;
+		Server destinationServer;
+		Message bestResponse = new Message(String.valueOf(reqID) + ":read-return:" + String.valueOf(pcid) + ":-10:0");
 		
-		int i = 0;
 		while (i < (servers.size() / 2) + 1) //address.length / 2 is an int and should self-truncate
 		{
 			packet = new DatagramPacket(new byte[1024], 1024);
@@ -226,7 +159,11 @@ public class Client {
 						}
 					}
 					
-
+					//track most recent data
+					if (reading && (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() > bestResponse.getPcID())))
+					{
+						bestResponse = new Message(response.formatMessage());
+					}	
 					i++;
 				}
 				
@@ -243,12 +180,18 @@ public class Client {
 							socket.close();
 							throw new RuntimeException("ERROR - resendSet smaller than expected");
 						}
-					socket.send(packet);
+					try {
+						socket.send(packet);
+					} catch (IOException e) {
+						socket.close();
+						e.printStackTrace();
+						throw e;
+					}
 				}
 			}
 			
 		}
-		socket.close();
+		return bestResponse;
 	}
 	
 }
