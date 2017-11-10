@@ -76,7 +76,16 @@ public class Client {
 		//send the request
 		DatagramPacket packet;
 		DatagramSocket socket = new DatagramSocket(port);
-		Message message = new Message(reqID + ":" + "read-request:" + pcid + ":" + key);
+		Message message = new Message("0:read-request:0:0");
+		try
+			{message = new Message(reqID + ":" + "read-request:" + pcid + ":" + key);}
+		catch (Exception e)
+		{
+			socket.close();
+			e.printStackTrace();
+			throw e;
+		}
+		
 		byte[] messageBytes = message.formatMessage().getBytes();
 		Iterator<Server> serverIterator = servers.iterator();
 		HashSet<Server> resendSet = new HashSet<Server>(servers.size());
@@ -102,7 +111,15 @@ public class Client {
 		//send the request
 		DatagramPacket packet;
 		DatagramSocket socket = new DatagramSocket(port);
-		Message message = new Message(reqID + ":" + "write-request:" + pcid + ":" + seqId + ":" + key + ":" + value);
+		Message message = new Message("0:read-request:0:0");
+		try
+			{message = new Message(reqID + ":" + "write-request:" + pcid + ":" + seqId + ":" + key + ":" + value);}
+		catch (Exception e)
+		{
+			socket.close();
+			e.printStackTrace();
+			throw e;
+		}
 		byte[] messageBytes = message.formatMessage().getBytes();	
 		Iterator<Server> serverIterator = servers.iterator();
 		HashSet<Server> resendSet = new HashSet<Server>(servers.size());
@@ -145,7 +162,15 @@ public class Client {
 				}
 			if (!timeout)	//found a packet
 			{
-				response = new Message(ByteArray.parseToString(packet.getData()));
+				try
+					{response = new Message(ByteArray.parseToString(packet.getData()));}
+				catch (Exception e)
+				{
+					socket.close();
+					e.printStackTrace();
+					throw e;
+				}
+				
 				if (response.getReqID() == reqID)
 				{
 					System.out.printf("got a response\n");
