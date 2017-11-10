@@ -35,14 +35,19 @@ public class Client {
 	
 	public void removeServer(Server SERVER)
 	{
-		Iterator<Server> removeIterator = servers.iterator();
+		removeServerFromSet(SERVER, servers);
+	}
+	
+	private void removeServerFromSet(Server SERVER, HashSet<Server> SERVERSET)
+	{
+		Iterator<Server> removeIterator = SERVERSET.iterator();
 		Server checkServer;
 		while (removeIterator.hasNext())
 		{
 			checkServer = removeIterator.next();
 			if (checkServer.equals(SERVER))
 			{
-				servers.remove(checkServer);
+				SERVERSET.remove(checkServer);
 				return;
 			}
 		}
@@ -147,17 +152,7 @@ public class Client {
 					
 					//TODO: MAKE THIS NOT HORRIBLE
 					receivedServer = new Server(packet.getAddress(), packet.getPort());
-					removeIterator = servers.iterator();
-					
-					while (removeIterator.hasNext())
-					{
-						checkServer = removeIterator.next();
-						if (checkServer.equals(receivedServer))
-						{
-							resendSet.remove(checkServer);
-							break;
-						}
-					}
+					removeServerFromSet(receivedServer, resendSet);
 					
 					//track most recent data
 					if (reading && (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() > bestResponse.getPcID())))
