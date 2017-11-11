@@ -38,6 +38,7 @@ public class Client {
 		removeServerFromSet(SERVER, servers);
 	}
 	
+
 	private void removeServerFromSet(Server SERVER, HashSet<Server> SERVERSET)
 	{
 		Iterator<Server> removeIterator = SERVERSET.iterator();
@@ -73,32 +74,13 @@ public class Client {
 	//specifically reads from the servers. Used privately by both the read and write functions
 	private Message readMessage(String key) throws IOException
 	{
-		//send the request
-		DatagramPacket packet;
 		DatagramSocket socket = new DatagramSocket(port);
-		Message message = new Message("0:read-request:0:0");
-		try
-			{message = new Message(reqID + ":" + "read-request:" + pcid + ":" + key);}
-		catch (Exception e)
-		{
-			socket.close();
-			e.printStackTrace();
-			throw e;
-		}
+		byte[] messageBytes = (reqID + ":" + "read-request:" + pcid + ":" + key).getBytes();
 		
-		byte[] messageBytes = message.formatMessage().getBytes();
-		Iterator<Server> serverIterator = servers.iterator();
-		HashSet<Server> resendSet = new HashSet<Server>(servers.size());
-		Server destinationServer;
-		while (serverIterator.hasNext())
-		{
-			destinationServer = serverIterator.next();
-			resendSet.add(destinationServer);
-			packet = new DatagramPacket(messageBytes, messageBytes.length, destinationServer.getAddress(), destinationServer.getPort());
-			socket.send(packet);
-		}
+		//send the requests and set resendSet = serverSet
+		HashSet<Server> resendSet = sendRequests(messageBytes, socket);
 		
-		//wait for and read responses
+		//wait for and read responses for most recent seqId
 		socket.setSoTimeout(5000);	//TODO : get better timeout duration
 		Message returnMessage = getResponses(socket, resendSet, messageBytes, true);
 		socket.close();
@@ -108,21 +90,25 @@ public class Client {
 	//specifically writes to the servers. Used privately by both the read and write functions
 	private void writeMessage(String key, String value, int seqId) throws IOException
 	{
-		//send the request
-		DatagramPacket packet;
 		DatagramSocket socket = new DatagramSocket(port);
-		Message message = new Message("0:read-request:0:0");
-		try
-			{message = new Message(reqID + ":" + "write-request:" + pcid + ":" + seqId + ":" + key + ":" + value);}
-		catch (Exception e)
-		{
-			socket.close();
-			e.printStackTrace();
-			throw e;
-		}
-		byte[] messageBytes = message.formatMessage().getBytes();	
-		Iterator<Server> serverIterator = servers.iterator();
+		byte[] messageBytes = (reqID + ":" + "write-request:" + pcid + ":" + seqId + ":" + key + ":" + value).getBytes();	
+		
+		//send the requests and set resendSet = serverSet
+		HashSet<Server> resendSet = sendRequests(messageBytes, socket);
+		
+		socket.setSoTimeout(5000);	//TODO : get better timeout duration
+		//wait for majority responses
+		getResponses(socket, resendSet, messageBytes, false);
+		socket.close();
+	}
+	
+
+	//used by writeMessaged and readMessage
+	private HashSet<Server> sendRequests(byte[] messageBytes, DatagramSocket socket) throws IOException
+	{
+		DatagramPacket packet;
 		HashSet<Server> resendSet = new HashSet<Server>(servers.size());
+		Iterator<Server> serverIterator = servers.iterator();
 		Server destinationServer;
 		while (serverIterator.hasNext())
 		{
@@ -131,20 +117,16 @@ public class Client {
 			packet = new DatagramPacket(messageBytes, messageBytes.length, destinationServer.getAddress(), destinationServer.getPort());
 			socket.send(packet);
 		}
-		
-		//wait for responses
-		socket.setSoTimeout(5000);	//TODO : get better timeout duration
-		getResponses(socket, resendSet, messageBytes, false);
-		socket.close();
+		return resendSet;
 	}
 	
+
+	//used by writeMessage and readMessage
 	private Message getResponses(DatagramSocket socket, HashSet<Server> resendSet, byte[] messageBytes, boolean reading) throws IOException
 	{
 		int i = 0;
 		boolean timeout = false;
 		Server receivedServer;
-		Server checkServer;
-		Iterator<Server> removeIterator;
 		Message response;
 		DatagramPacket packet;
 		Server destinationServer;
