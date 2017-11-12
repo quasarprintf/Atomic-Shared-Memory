@@ -8,7 +8,7 @@ public class Message {
 	private String value = null;
 	private int seqID = -2;
 	
-	public Message(String messageString)
+	public Message(String messageString) throws RuntimeException
 	{
 		String[] messageArray = messageString.split(":");
 		for (int trim = 0; trim < messageArray.length; trim++)
