@@ -34,7 +34,6 @@ public class Main {
 		String address;
 		int port;
 		
-		
 		if (args.length == 0) {
 			 address = "137.99.128.56";
 			 port = 2000;
