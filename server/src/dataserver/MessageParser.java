@@ -72,6 +72,9 @@ public class MessageParser {
 		else if (flag.equals("wait"))
 			this.server.sleep();
 		
+		else if (flag.equals("set-delay"))
+			this.server.delay = Long.parseLong(message.split(":")[1]);
+		
 		// TODO more if statements... or case? whatever
 		
 		

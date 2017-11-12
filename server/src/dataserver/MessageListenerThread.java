@@ -31,6 +31,7 @@ public abstract class MessageListenerThread extends Thread {
 		Message message;
 
 		while(this.cont) {
+			Thread.sleep(this.server.delay);
 			if ( (message = this.listen()) != null) {
 				this.parser.parse(message);
 			}

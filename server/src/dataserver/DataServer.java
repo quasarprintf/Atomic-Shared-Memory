@@ -38,6 +38,7 @@ public abstract class DataServer {
 	 * This is the list of other data servers in the network
 	 */
 	public final int port, id;
+	public long delay = 0;
 	
 	protected int seqcount = 0;
 	public DatagramSocket soc;
@@ -131,7 +132,6 @@ public abstract class DataServer {
 	public void wake() {
 		this.awake = true;
 	}
-
 
 	
 	
