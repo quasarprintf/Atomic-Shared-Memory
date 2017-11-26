@@ -13,15 +13,15 @@ import util.Server;
 
 
 /*
-   To create a client: 				"new" "client" *clientName* *pcId* *port* *serverSet*
-   To create a server: 				"new" "server" *serverName* *IpAddress* *port*
-   To create a serverSet: 			"new" "serverset" *serversetName*
-   To add a server to a serverSet: 	"add" "serverSet" *serverSetName* *server*
-   To add a server to a client:		"add" "server" *clientName* *serverName*
-   To remove a server from a client:"remove" "server" *clientName* *serverName*
-   To read:							"read" *clientName* *key*
-   To write:						"write" *clientName* *key* *value*
-   To exit:							"end"
+   To create a client:					"newclient" *clientName* *pcId* *port* *serverSet*
+   To create a server:					"newserver" *serverName* *IpAddress* *port*
+   To create a serverSet:				"newserverset" *serversetName*
+   To add a server to a serverSet:		"addserverSet" *serverSetName* *server*
+   To add a server to a client:			"addserver" *clientName* *serverName*
+   To remove a server from a client:	"removeserver" *clientName* *serverName*
+   To read:								"read" *clientName* *key*
+   To write:							"write" *clientName* *key* *value*
+   To exit:								"end"
  */
 
 // Make sure anything that the commands can throw is listed here
@@ -33,14 +33,14 @@ public class DynamicRuntimeTests {
 	// An elegant mapping of commands to the method to run them
 	private static final Map<String, Command> commands = new HashMap<>();
 	static {
-		commands.put("read", 		 (String[] args) 	-> 	read(args));
-		commands.put("write", 		 (String[] args) 	-> 	write(args));
-		commands.put("addserver", 	 (String[] args) 	-> 	addServer(args));
-		commands.put("newserver",    (String[] args) 	-> 	createServer(args));
-		commands.put("newclient", 	 (String[] args) 	-> 	createClient(args));
-		commands.put("addserverset", (String[] args) 	-> 	addServerSet(args));
-		commands.put("removeserver", (String[] args) 	-> 	removeServer(args));
-		commands.put("newserverset", (String[] args) 	-> 	createServerSet(args));
+		commands.put("read",			(String[] args)		-> 	read(args));
+		commands.put("write",			(String[] args)		-> 	write(args));
+		commands.put("addserver",		(String[] args)		-> 	addServer(args));
+		commands.put("newserver",		(String[] args)		-> 	createServer(args));
+		commands.put("newclient",		(String[] args)		-> 	createClient(args));
+		commands.put("addserverset",	(String[] args)		-> 	addServerSet(args));
+		commands.put("removeserver",	(String[] args)		-> 	removeServer(args));
+		commands.put("newserverset",	(String[] args)		-> 	createServerSet(args));
 	}
 	//NOT CASE SENSITIVE
 
