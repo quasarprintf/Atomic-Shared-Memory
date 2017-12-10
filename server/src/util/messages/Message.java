@@ -29,7 +29,7 @@ public class Message {
 			
 		
 	}
-	public Message(Address sender, Address recipient, String messageParts) {
+	public Message(Address sender, Address recipient, String messageParts) { 
 		this.sender = sender;
 		this.recipient = recipient;
 		this.parts = messageParts.split(Message.DELIMITER);
