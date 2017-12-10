@@ -45,8 +45,8 @@ public class MemoryDataServer extends DataServer {
 	protected void write(String key, String value, String timestamp, Address returnAddress, String reqid) {
 		
 		if (this.DATA.containsKey(key)) {
-			int localStamp = Integer.parseInt(this.TIME.get(key), 16);
-			int newStamp = Integer.parseInt(timestamp, 16);
+			int localStamp = Integer.parseInt(this.TIME.get(key));
+			int newStamp = Integer.parseInt(timestamp);
 			
 			if (localStamp < newStamp) { // if the local stamp is older than the new stamp, we update
 				//System.out.println("We're updating!");
