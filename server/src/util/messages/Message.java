@@ -53,10 +53,10 @@ public class Message {
 		return this.get(1);
 	}
 	public int getPCID() {
-		return Integer.parseInt(this.get(2), 16);
+		return Integer.parseInt(this.get(2));
 	}
 	public int getReqID() {
-		return Integer.parseInt(this.get(0), 16);
+		return Integer.parseInt(this.get(0));
 	}
 	
 	

@@ -16,7 +16,7 @@ import util.Server;
    To create a client:					"newclient" *clientName* *pcId* *port* *serverSet*
    To create a server:					"newserver" *serverName* *IpAddress* *port*
    To create a serverSet:				"newserverset" *serversetName*
-   To add a server to a serverSet:		"addserverSet" *serverSetName* *server*
+   To add a server to a serverSet:		"addserverset" *serverSetName* *server*
    To add a server to a client:			"addserver" *clientName* *serverName*
    To remove a server from a client:	"removeserver" *clientName* *serverName*
    To read:								"read" *clientName* *key*

@@ -15,7 +15,7 @@ public class WriteRequestMessage extends Message {
 		return super.get(5);
 	}
 	public int getSeqId() {
-		return Integer.parseInt(super.get(3), 16);
+		return Integer.parseInt(super.get(3));
 	}
 
 }
