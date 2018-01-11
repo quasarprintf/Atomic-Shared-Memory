@@ -71,6 +71,12 @@ public class Client {
 		writeMessage(key, value, seqID.getSeqID() + 1);
 	}
 	
+	public String ohsamRead(String key) throws IOException
+	{
+		reqID++;
+		return ohsamReadMessage(key).getValue();
+	}
+	
 	//specifically reads from the servers. Used privately by both the read and write functions
 	private Message readMessage(String key) throws IOException
 	{
@@ -82,7 +88,7 @@ public class Client {
 		
 		//wait for and read responses for most recent seqId
 		socket.setSoTimeout(5000);	//TODO : get better timeout duration
-		Message returnMessage = getResponses(socket, resendSet, messageBytes, true);
+		Message returnMessage = getResponses(socket, resendSet, messageBytes, 1);
 		socket.close();
 		return returnMessage;
 	}
@@ -98,8 +104,24 @@ public class Client {
 		
 		socket.setSoTimeout(5000);	//TODO : get better timeout duration
 		//wait for majority responses
-		getResponses(socket, resendSet, messageBytes, false);
+		getResponses(socket, resendSet, messageBytes, 0);
 		socket.close();
+	}
+	
+	//Specifically does an OSAM read. Used privately by the osamRead method
+	private Message ohsamReadMessage(String key) throws IOException
+	{
+		DatagramSocket socket = new DatagramSocket(port);
+		byte[] messageBytes = (reqID + ":" + "osam-read-request:" + pcid + ":" + key).getBytes();
+		
+		//send the requests and set resendSet = serverSet
+		HashSet<Server> resendSet = sendRequests(messageBytes, socket);
+		
+		//wait for and read responses for most recent seqId
+		socket.setSoTimeout(5000);	//TODO : get better timeout duration
+		Message returnMessage = getResponses(socket, resendSet, messageBytes, 2);
+		socket.close();
+		return returnMessage;
 	}
 	
 
@@ -122,7 +144,10 @@ public class Client {
 	
 
 	//used by writeMessage and readMessage
-	private Message getResponses(DatagramSocket socket, HashSet<Server> resendSet, byte[] messageBytes, boolean reading) throws IOException
+	//operation == 0: write
+	//operation == 1: read
+	//operation == 2: oh-SAM
+	private Message getResponses(DatagramSocket socket, HashSet<Server> resendSet, byte[] messageBytes, int operation) throws IOException
 	{
 		int i = 0;
 		boolean timeout = false;
@@ -144,6 +169,7 @@ public class Client {
 				}
 			if (!timeout)	//found a packet
 			{
+				
 				try
 					{response = new Message(ByteArray.parseToString(packet.getData()));}
 				catch (Exception e)
@@ -152,20 +178,27 @@ public class Client {
 					e.printStackTrace();
 					throw e;
 				}
-				
+				System.out.printf("found a packet, reqID = %d\n", response.getReqID());
 				if (response.getReqID() == reqID)
 				{
 					System.out.printf("got a response\n");
+					
+					System.out.printf(response.formatMessage());
 					
 					//TODO: MAKE THIS NOT HORRIBLE
 					receivedServer = new Server(packet.getAddress(), packet.getPort());
 					removeServerFromSet(receivedServer, resendSet);
 					
 					//track most recent data
-					if (reading && (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() > bestResponse.getPcID())))
+					if (operation == 1 && (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() > bestResponse.getPcID())))
 					{
 						bestResponse = new Message(response.formatMessage());
-					}	
+					}
+					
+					if (operation == 2 && (response.getSeqID() < bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() > bestResponse.getPcID())))
+					{
+						bestResponse = new Message(response.formatMessage());
+					}
 					i++;
 				}
 				
