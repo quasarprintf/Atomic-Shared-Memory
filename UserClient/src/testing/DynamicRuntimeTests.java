@@ -22,6 +22,7 @@ import util.Server;
    To read:								"read" *clientName* *key*
    To oh-SAM read:						"ohsamread" *clientName* *key*
    To write:							"write" *clientName* *key* *value*
+   to oh-SAM write:						"ohsamwrite" *clientName* *key* *value*
    To exit:								"end"
  */
 

@@ -177,7 +177,7 @@ public class Message {
 			{return formatWriteRequest();}
 		else if (flag.equals("write-return"))
 			{return formatWriteReturn();}
-		else if (flag.equals("osam-read-request"))
+		else if (flag.equals("ohsam-read-request"))
 			{return formatOhsamRead();}
 		else
 			{throw new RuntimeException("ERROR - message type unknown: " + flag);}

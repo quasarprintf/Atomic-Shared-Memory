@@ -115,11 +115,11 @@ public class Client {
 		socket.close();
 	}
 	
-	//Specifically does an OSAM read. Used privately by the osamRead method
+	//Specifically does an OHSAM read. Used privately by the ohsamRead method
 	private Message ohsamReadMessage(String key) throws IOException
 	{
 		DatagramSocket socket = new DatagramSocket(port);
-		byte[] messageBytes = (reqID + ":" + "osam-read-request:" + pcid + ":" + key).getBytes();
+		byte[] messageBytes = (reqID + ":" + "ohsam-read-request:" + pcid + ":" + key).getBytes();
 		
 		//send the requests and set resendSet = serverSet
 		HashSet<Server> resendSet = sendRequests(messageBytes, socket);
