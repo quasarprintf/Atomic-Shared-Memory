@@ -71,6 +71,13 @@ public class Client {
 		writeMessage(key, value, seqID.getSeqID() + 1);
 	}
 	
+	public void ohsamWrite(String key, String value) throws IOException
+	{
+		reqID++;
+		Message seqID = ohsamReadMessage(key);
+		writeMessage(key, value, seqID.getSeqID() + 1);
+	}
+	
 	public String ohsamRead(String key) throws IOException
 	{
 		reqID++;

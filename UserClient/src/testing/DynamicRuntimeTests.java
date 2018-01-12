@@ -37,6 +37,7 @@ public class DynamicRuntimeTests {
 		commands.put("read",			(String[] args)		-> 	read(args));
 		commands.put("ohsamread",		(String[] args)		-> 	ohsamRead(args));
 		commands.put("write",			(String[] args)		-> 	write(args));
+		commands.put("ohsamwrite",		(String[] args)		-> 	ohsamWrite(args));
 		commands.put("addserver",		(String[] args)		-> 	addServer(args));
 		commands.put("newserver",		(String[] args)		-> 	createServer(args));
 		commands.put("newclient",		(String[] args)		-> 	createClient(args));
@@ -60,6 +61,11 @@ public class DynamicRuntimeTests {
 	
 	private static void write(String[] input) throws IOException {
 		clients.get(input[1]).write(input[2], input[3]);
+		System.out.println("[w]\t" + input[2] + "->" + input[3]);
+	}
+	
+	private static void ohsamWrite(String[] input) throws IOException {
+		clients.get(input[1]).ohsamWrite(input[2], input[3]);
 		System.out.println("[w]\t" + input[2] + "->" + input[3]);
 	}
 	
