@@ -13,7 +13,7 @@ public class Message {
 	 * read returns		: <reqid>:"read-return":<pcid>:<seqid>:<val>
 	 * write request	: <reqid>:"write-request":<pcid>:<seqid>:<key>:<val>
 	 * write return		: <reqid>:"write-return":<pcid>:<key>
-	 *oh-SAM read		: <reqid>:"ohsam-read-request":<pcid>:<key>
+	 * oh-SAM read		: <reqid>:"ohsam-read-request":<pcid>:<key>
 	 */
 	
 	public Message(String messageString) throws RuntimeException
