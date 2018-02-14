@@ -74,7 +74,10 @@ public class Client {
 	public void ohsamWrite(String key, String value) throws IOException
 	{
 		reqID++;
-		Message seqID = ohsamReadMessage(key);
+		System.out.printf("about to read before ohsam-writing\n");
+		Message seqID = readMessage(key);
+		System.out.printf("about to ohsam-write\n");
+		//System.out.printf("Final seqID is %d\n", seqID.getSeqID());
 		writeMessage(key, value, seqID.getSeqID() + 1);
 	}
 	
@@ -127,6 +130,7 @@ public class Client {
 		//wait for and read responses for most recent seqId
 		socket.setSoTimeout(5000);	//TODO : get better timeout duration
 		Message returnMessage = getResponses(socket, resendSet, messageBytes, 2);
+		//System.out.printf("%s\n",returnMessage.formatMessage());
 		socket.close();
 		return returnMessage;
 	}
@@ -164,11 +168,12 @@ public class Client {
 		Server destinationServer;
 		Message bestResponse = new Message(String.valueOf(reqID) + ":read-return:" + String.valueOf(pcid) + ":-10:0");
 		
+		
 		while (i < (servers.size() / 2) + 1) //address.length / 2 is an int and should self-truncate
 		{
 			packet = new DatagramPacket(new byte[1024], 1024);
 			timeout = false;
-			System.out.printf("about to wait for responses to a write\n");
+			System.out.printf("about to wait for responses to a thing\n");
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
 				catch (SocketTimeoutException e)
 				{
@@ -190,21 +195,24 @@ public class Client {
 				{
 					System.out.printf("got a response\n");
 					
-					System.out.printf(response.formatMessage());
+					System.out.printf(response.formatMessage() + "\n");
 					
 					//TODO: MAKE THIS NOT HORRIBLE
 					receivedServer = new Server(packet.getAddress(), packet.getPort());
 					removeServerFromSet(receivedServer, resendSet);
 					
 					//track most recent data
-					if (operation == 1 && (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() > bestResponse.getPcID())))
+					//System.out.printf("seqid from response is %d\n", response.getSeqID());
+					if (operation == 1 && (bestResponse.getSeqID() == -10 || (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() >= bestResponse.getPcID()))))
 					{
 						bestResponse = new Message(response.formatMessage());
+						//System.out.printf("updating best response\n");
 					}
 					
-					if (operation == 2 && (response.getSeqID() < bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() > bestResponse.getPcID())))
+					if (operation == 2 && (bestResponse.getSeqID() == -10 || (response.getSeqID() < bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() >= bestResponse.getPcID()))))
 					{
 						bestResponse = new Message(response.formatMessage());
+						//System.out.printf("updating best response\n");
 					}
 					i++;
 				}
@@ -220,7 +228,7 @@ public class Client {
 						catch (RuntimeException e)
 						{
 							socket.close();
-							throw new RuntimeException("ERROR - resendSet smaller than expected");
+							throw new RuntimeException("ERROR - resendSet smaller than expected\n");
 						}
 					try {
 						socket.send(packet);
