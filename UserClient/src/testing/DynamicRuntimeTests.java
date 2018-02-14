@@ -20,7 +20,9 @@ import util.Server;
    To add a server to a client:			"addserver" *clientName* *serverName*
    To remove a server from a client:	"removeserver" *clientName* *serverName*
    To read:								"read" *clientName* *key*
+   To oh-SAM read:						"ohsamread" *clientName* *key*
    To write:							"write" *clientName* *key* *value*
+   to oh-SAM write:						"ohsamwrite" *clientName* *key* *value*
    To exit:								"end"
  */
 
@@ -34,7 +36,9 @@ public class DynamicRuntimeTests {
 	private static final Map<String, Command> commands = new HashMap<>();
 	static {
 		commands.put("read",			(String[] args)		-> 	read(args));
+		commands.put("ohsamread",		(String[] args)		-> 	ohsamRead(args));
 		commands.put("write",			(String[] args)		-> 	write(args));
+		commands.put("ohsamwrite",		(String[] args)		-> 	ohsamWrite(args));
 		commands.put("addserver",		(String[] args)		-> 	addServer(args));
 		commands.put("newserver",		(String[] args)		-> 	createServer(args));
 		commands.put("newclient",		(String[] args)		-> 	createClient(args));
@@ -52,8 +56,17 @@ public class DynamicRuntimeTests {
 		System.out.println("[r]\t" + input[2] + "->" + clients.get(input[1]).read(input[2]));
 	}
 	
+	private static void ohsamRead(String[] input) throws IOException {
+		System.out.println("[r]\t" + input[2] + "->" + clients.get(input[1]).ohsamRead(input[2]));
+	}
+	
 	private static void write(String[] input) throws IOException {
 		clients.get(input[1]).write(input[2], input[3]);
+		System.out.println("[w]\t" + input[2] + "->" + input[3]);
+	}
+	
+	private static void ohsamWrite(String[] input) throws IOException {
+		clients.get(input[1]).ohsamWrite(input[2], input[3]);
 		System.out.println("[w]\t" + input[2] + "->" + input[3]);
 	}
 	
@@ -87,6 +100,8 @@ public class DynamicRuntimeTests {
 		System.out.println("[i]\tServerSet Created: \t" + input[1]);
 	}
 	
+	
+	
 	public static void parseCommand(String input) throws NumberFormatException, UnknownHostException, IOException {
 		String[] commandParsed = input.split(" ");
 		commands.get(commandParsed[0]).run(commandParsed);
@@ -114,7 +129,7 @@ public class DynamicRuntimeTests {
 			} catch (UnknownHostException e) {
 				System.out.println("[e]\tCould not find host");
 			} catch (IOException e) {
-				System.out.println("[e]\tAn IO exception has occured");
+				System.out.println("[e]\tAn IO exception has occurred");
 			} catch (Exception e) {
 				if (!commands.containsKey(commandParsed[0])) System.out.println("[e]\tCommand not found");
 				else System.out.println("[e]\tBad Input in " + commandParsed[0]);

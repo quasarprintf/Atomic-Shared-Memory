@@ -8,6 +8,14 @@ public class Message {
 	private String value = null;
 	private int seqID = -2;
 	
+	/*message formats:
+	 * read request		: <reqid>:"read-request":<pcid>:<key>
+	 * read returns		: <reqid>:"read-return":<pcid>:<seqid>:<val>
+	 * write request	: <reqid>:"write-request":<pcid>:<seqid>:<key>:<val>
+	 * write return		: <reqid>:"write-return":<pcid>:<key>
+	 * oh-SAM read		: <reqid>:"ohsam-read-request":<pcid>:<key>
+	 */
+	
 	public Message(String messageString) throws RuntimeException
 	{
 		String[] messageArray = messageString.split(":");
@@ -24,6 +32,8 @@ public class Message {
 			{buildWriteRequest(messageArray);}
 		else if (messageArray[1].equals("write-return"))
 			{buildWriteReturn(messageArray);}
+		else if (messageArray[1].equals("ohsam-read-request"))
+			{buildOhsamRead(messageArray);}
 		else
 		{
 			System.out.printf("Message was %s\n", messageString);
@@ -63,6 +73,14 @@ public class Message {
 	}
 	
 	private void buildWriteReturn(String[] messageArray)
+	{
+		reqID = Integer.parseInt(messageArray[0]);
+		flag = messageArray[1];
+		pcID = Integer.parseInt(messageArray[2]);
+		key = messageArray[3];
+	}
+	
+	private void buildOhsamRead(String[] messageArray)
 	{
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
@@ -159,6 +177,8 @@ public class Message {
 			{return formatWriteRequest();}
 		else if (flag.equals("write-return"))
 			{return formatWriteReturn();}
+		else if (flag.equals("ohsam-read-request"))
+			{return formatOhsamRead();}
 		else
 			{throw new RuntimeException("ERROR - message type unknown: " + flag);}
 	}
@@ -183,6 +203,11 @@ public class Message {
 	private String formatWriteReturn()
 	{
 		return reqID + ":" + flag + ":" + String.valueOf(pcID) + ":" + key;
+	}
+	
+	private String formatOhsamRead()
+	{
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + ":" + key;
 	}
 	
 }
