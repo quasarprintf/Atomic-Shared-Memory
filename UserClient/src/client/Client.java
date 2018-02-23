@@ -5,6 +5,7 @@ import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Random;
 
 import util.ByteArray;
 import util.Message;
@@ -15,11 +16,17 @@ public class Client {
 	HashSet<Server> servers = new HashSet<Server>(5);	//set of Servers. Can be modified with functions
 	int port = 2000;	//port to use for everything
 	int reqID = 0;
+	float xpos = 0;
+	float ypos = 0;
+	int droprate = 0;
+	Random rng = new Random();
 	
-	public Client(int PCID, int PORT, HashSet<Server> SERVERS)
+	public Client(int PCID, int PORT, HashSet<Server> SERVERS, float XPOS, float YPOS)
 	{
 		pcid = PCID;
 		port = PORT;
+		xpos = XPOS;
+		ypos = YPOS;
 		Iterator<Server> serverIterator = SERVERS.iterator();
 		while (serverIterator.hasNext())
 		{
@@ -91,7 +98,7 @@ public class Client {
 	private Message readMessage(String key) throws IOException
 	{
 		DatagramSocket socket = new DatagramSocket(port);
-		byte[] messageBytes = (reqID + ":" + "read-request:" + pcid + ":" + key).getBytes();
+		byte[] messageBytes = (reqID + ":" + "read-request:" + pcid + ":" + String.valueOf(xpos) + ":" + String.valueOf(ypos) + ":" + key).getBytes();
 		
 		//send the requests and set resendSet = serverSet
 		HashSet<Server> resendSet = sendRequests(messageBytes, socket);
@@ -107,7 +114,7 @@ public class Client {
 	private void writeMessage(String key, String value, int seqId) throws IOException
 	{
 		DatagramSocket socket = new DatagramSocket(port);
-		byte[] messageBytes = (reqID + ":" + "write-request:" + pcid + ":" + seqId + ":" + key + ":" + value).getBytes();	
+		byte[] messageBytes = (reqID + ":" + "write-request:" + pcid + ":" + String.valueOf(xpos) + ":" + String.valueOf(ypos) + ":" + seqId + ":" + key + ":" + value).getBytes();	
 		
 		//send the requests and set resendSet = serverSet
 		HashSet<Server> resendSet = sendRequests(messageBytes, socket);
@@ -122,7 +129,7 @@ public class Client {
 	private Message ohsamReadMessage(String key) throws IOException
 	{
 		DatagramSocket socket = new DatagramSocket(port);
-		byte[] messageBytes = (reqID + ":" + "ohsam-read-request:" + pcid + ":" + key).getBytes();
+		byte[] messageBytes = (reqID + ":" + "ohsam-read-request:" + pcid + ":" + String.valueOf(xpos) + ":" + String.valueOf(ypos) + ":" + key).getBytes();
 		
 		//send the requests and set resendSet = serverSet
 		HashSet<Server> resendSet = sendRequests(messageBytes, socket);
@@ -166,7 +173,7 @@ public class Client {
 		Message response;
 		DatagramPacket packet;
 		Server destinationServer;
-		Message bestResponse = new Message(String.valueOf(reqID) + ":read-return:" + String.valueOf(pcid) + ":-10:0");
+		Message bestResponse = new Message(String.valueOf(reqID) + ":read-return:" + String.valueOf(pcid) + ":" + String.valueOf(xpos) + ":" + String.valueOf(ypos) + ":-10:0");
 		
 		
 		while (i < (servers.size() / 2) + 1) //address.length / 2 is an int and should self-truncate
@@ -191,7 +198,20 @@ public class Client {
 					throw e;
 				}
 				System.out.printf("found a packet, reqID = %d\n", response.getReqID());
-				if (response.getReqID() == reqID)
+				if (response.getFlag() == "set-location")
+				{
+					xpos = response.getXVal();
+					ypos = response.getYVal();
+				}
+				else if (response.getFlag() == "drop")
+				{
+					droprate = response.getDroprate();
+				}
+				else if (response.getFlag() == "kill")
+				{
+					System.out.printf("received a kill command for some reason. Ignoring it\n");
+				}
+				else if (response.getReqID() == reqID && rng.nextInt(100) >= droprate)
 				{
 					System.out.printf("got a response\n");
 					

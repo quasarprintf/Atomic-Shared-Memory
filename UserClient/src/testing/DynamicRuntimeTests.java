@@ -13,7 +13,7 @@ import util.Server;
 
 
 /*
-   To create a client:					"newclient" *clientName* *pcId* *port* *serverSet*
+   To create a client:					"newclient" *clientName* *pcId* *port* *serverSet* *xpos* *ypos*
    To create a server:					"newserver" *serverName* *IpAddress* *port*
    To create a serverSet:				"newserverset" *serversetName*
    To add a server to a serverSet:		"addserverset" *serverSetName* *server*
@@ -81,7 +81,7 @@ public class DynamicRuntimeTests {
 	}
 	
 	private static void createClient(String[] input) {
-		clients.put(input[1], new Client((int)Integer.valueOf(input[2]), (int)Integer.valueOf(input[3]), serverSet.get(input[4])));
+		clients.put(input[1], new Client((int)Integer.valueOf(input[2]), (int)Integer.valueOf(input[3]), serverSet.get(input[4]), Float.valueOf(input[5]), Float.valueOf(input[6])));
 		System.out.println("[i]\tClient Created: \t" + input[1]);
 	}
 	

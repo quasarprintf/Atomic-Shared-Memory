@@ -8,12 +8,22 @@ public class Message {
 	private String value = null;
 	private int seqID = -2;
 	
+	private float xval = 0;
+	private float yval = 0;
+	
+	private int droprate = 0;
+	
 	/*message formats:
-	 * read request		: <reqid>:"read-request":<pcid>:<key>
-	 * read returns		: <reqid>:"read-return":<pcid>:<seqid>:<val>
-	 * write request	: <reqid>:"write-request":<pcid>:<seqid>:<key>:<val>
-	 * write return		: <reqid>:"write-return":<pcid>:<key>
-	 * oh-SAM read		: <reqid>:"ohsam-read-request":<pcid>:<key>
+	 * read request		: <reqid>:"read-request":<pcid>:<xpos>:<ypos>:<key>
+	 * read returns		: <reqid>:"read-return":<pcid>:<xpos>:<ypos>:<seqid>:<val>
+	 * write request	: <reqid>:"write-request":<pcid>:<xpos>:<ypos>:<seqid>:<key>:<val>
+	 * write return		: <reqid>:"write-return":<pcid>:<xpos>:<ypos>:<key>
+	 * oh-SAM read		: <reqid>:"ohsam-read-request":<pcid>:<xpos>:<ypos>:<key>
+	 * 
+	 * Management messages:
+	 * set-location		: <reqid>:"set-location":<pcid>:<x-coordinate>:<y-coordinate>
+	 * drop		: <reqid>:"drop":<dropfloat>
+	 * kill		: <reqid>:"wait"
 	 */
 	
 	public Message(String messageString) throws RuntimeException
@@ -34,6 +44,12 @@ public class Message {
 			{buildWriteReturn(messageArray);}
 		else if (messageArray[1].equals("ohsam-read-request"))
 			{buildOhsamRead(messageArray);}
+		else if (messageArray[1].equals("set-location"))
+			{buildSetLocation(messageArray);}
+		else if (messageArray[1].equals("drop"))
+			{buildDrop(messageArray);}
+		else if (messageArray[1].equals("kill"))
+			{buildKill(messageArray);}
 		else
 		{
 			System.out.printf("Message was %s\n", messageString);
@@ -50,7 +66,9 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
-		key = messageArray[3];
+		xval = Float.parseFloat(messageArray[3]);
+		yval = Float.parseFloat(messageArray[4]);
+		key = messageArray[5];
 	}
 	
 	private void buildReadReturn(String[] messageArray)
@@ -58,8 +76,10 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
-		seqID = Integer.parseInt(messageArray[3]);
-		value = messageArray[4];
+		xval = Float.parseFloat(messageArray[3]);
+		yval = Float.parseFloat(messageArray[4]);
+		seqID = Integer.parseInt(messageArray[5]);
+		value = messageArray[6];
 	}
 	
 	private void buildWriteRequest(String[] messageArray)
@@ -67,9 +87,11 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
-		seqID = Integer.parseInt(messageArray[3]);
-		key = messageArray[4];
-		value = messageArray[5];
+		xval = Float.parseFloat(messageArray[3]);
+		yval = Float.parseFloat(messageArray[4]);
+		seqID = Integer.parseInt(messageArray[5]);
+		key = messageArray[6];
+		value = messageArray[7];
 	}
 	
 	private void buildWriteReturn(String[] messageArray)
@@ -77,7 +99,9 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
-		key = messageArray[3];
+		xval = Float.parseFloat(messageArray[3]);
+		yval = Float.parseFloat(messageArray[4]);
+		key = messageArray[5];
 	}
 	
 	private void buildOhsamRead(String[] messageArray)
@@ -85,7 +109,33 @@ public class Message {
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
 		pcID = Integer.parseInt(messageArray[2]);
-		key = messageArray[3];
+		xval = Float.parseFloat(messageArray[3]);
+		yval = Float.parseFloat(messageArray[4]);
+		key = messageArray[5];
+	}
+	
+	private void buildSetLocation(String[] messageArray)
+	{
+		reqID = Integer.parseInt(messageArray[0]);
+		flag = messageArray[1];
+		pcID = Integer.parseInt(messageArray[2]);
+		xval = Float.parseFloat(messageArray[3]);
+		yval = Float.parseFloat(messageArray[4]);
+		xval = Float.parseFloat(messageArray[5]);
+		yval = Float.parseFloat(messageArray[6]);
+	}
+	
+	private void buildDrop(String[] messageArray)
+	{
+		reqID = Integer.parseInt(messageArray[0]);
+		flag = messageArray[1];
+		droprate = Integer.valueOf(messageArray[2]);
+	}
+	
+	private void buildKill(String[] messageArray)
+	{
+		reqID = Integer.parseInt(messageArray[0]);
+		flag = messageArray[1];
 	}
 	
 	
@@ -166,6 +216,21 @@ public class Message {
 		return seqID;
 	}
 	
+	public float getXVal()
+	{
+		return xval;
+	}
+	
+	public float getYVal()
+	{
+		return yval;
+	}
+	
+	public int getDroprate()
+	{
+		return droprate;
+	}
+	
 	
 	public String formatMessage() //returns a string with the message contents properly formatted
 	{
@@ -179,6 +244,12 @@ public class Message {
 			{return formatWriteReturn();}
 		else if (flag.equals("ohsam-read-request"))
 			{return formatOhsamRead();}
+		else if (flag.equals("set-location"))
+			{return formatSetLocation();}
+		else if (flag.equals("drop"))
+			{return formatDrop();}
+		else if (flag.equals("kill"))
+			{return formatKill();}
 		else
 			{throw new RuntimeException("ERROR - message type unknown: " + flag);}
 	}
@@ -187,27 +258,41 @@ public class Message {
 	
 	private String formatReadRequest()
 	{
-		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + ":" + key;
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
 	}
 	
 	private String formatReadReturn()
 	{
-		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + ":" + String.valueOf(seqID) + ":" + value;
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + String.valueOf(seqID) + ":" + value;
 	}
 	
 	private String formatWriteRequest()
 	{
-		return reqID + ":" + flag + ":" + String.valueOf(pcID) + ":" + String.valueOf(seqID) + ":" + key + ":" + value;
+		return reqID + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + String.valueOf(seqID) + ":" + key + ":" + value;
 	}
 	
 	private String formatWriteReturn()
 	{
-		return reqID + ":" + flag + ":" + String.valueOf(pcID) + ":" + key;
+		return reqID + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
 	}
 	
 	private String formatOhsamRead()
 	{
-		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + ":" + key;
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
+	}
+	
+	private String formatSetLocation()
+	{
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + ":" + String.valueOf(xval) + ":" + String.valueOf(yval);
+	}
+	
+	private String formatDrop()
+	{
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(droprate);
+	}
+	private String formatKill()
+	{
+		return String.valueOf(reqID) + ":" + flag;
 	}
 	
 }
