@@ -19,9 +19,11 @@ import util.Server;
    To create a serverSet:				"newserverset" *serverSetName*
    To add a server to a serverSet:		"addserverset" *serverSetName* *server*
    To remove a server from a serverSet:	"removeserverset" *serversSetName* *serverName*
-   To set the port to use:				"outport" *port#*
    
-   To set a location for a machine:		"setloc" *machineName* *xfloat* *yfloat*
+   Manager Commands
+   To set the port to use for manager:	"managerport" *port#*
+   To set the PCid to use for manager:	"managerpcid" *pcid*
+   To set a location for a server:		"setloc" *serverName* *xfloat* *yfloat*
    To set drop rate for a server:		"drop" *drop%* *serverName*
    To set drop rate for server set:		"dropset" *drop%* *serverName*
    To kill a server:					"kill" *serverName*
@@ -45,8 +47,8 @@ public class DynamicRuntimeTests {
 		commands.put("addserverset",	(String[] args)		-> 	addServerSet(args));
 		commands.put("removeserverset",	(String[] args)		-> 	removeServerSet(args));
 		commands.put("newserverset",	(String[] args)		-> 	createServerSet(args));
-		commands.put("outport",			(String[] args)		-> 	outport(args));
-		commands.put("pcid",			(String[] args)		-> 	pcid(args));
+		commands.put("managerport",		(String[] args)		-> 	outport(args));
+		commands.put("managerpcid",		(String[] args)		-> 	pcid(args));
 		commands.put("setloc",			(String[] args)		-> 	setloc(args));
 		commands.put("kill",			(String[] args)		-> 	kill(args));
 		commands.put("killset",			(String[] args)		-> 	killSet(args));
@@ -78,7 +80,7 @@ public class DynamicRuntimeTests {
 	
 	private static void setloc(String[] input) throws IOException
 	{
-		byte[] messageBytes = (reqID++ + ":set-location:" + pcID + input[2] + input[3]).getBytes();
+		byte[] messageBytes = (reqID++ + ":set-location:" + pcID + ":" + input[2] + ":" + input[3]).getBytes();
 		DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[1]).getAddress(), servers.get(input[1]).getPort());
 		socket.send(packet);
 	}

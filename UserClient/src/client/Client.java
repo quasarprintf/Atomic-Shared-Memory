@@ -2,6 +2,7 @@ package client;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -61,6 +62,64 @@ public class Client {
 		}
 	}
 	
+	//blocks until a management message is received. For testing purposes
+	public void beManaged() throws SocketException
+	{
+		DatagramSocket socket = new DatagramSocket(port);
+		Message response;
+		DatagramPacket packet;
+		while (true)
+		{
+			packet = new DatagramPacket(new byte[1024], 1024);
+			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
+			catch(Exception e)
+			{
+				e.printStackTrace();
+				continue;
+			}
+			try {response = new Message(ByteArray.parseToString(packet.getData()));}
+			catch (Exception e)
+			{
+				socket.close();
+				e.printStackTrace();
+				throw e;
+			}
+			if (response.getFlag().equals("set-location"))
+			{
+				xpos = response.getXVal();
+				ypos = response.getYVal();
+				System.err.printf("[i]\treceived a setloc command.\n");
+				socket.close();
+				return;
+			}
+			else if (response.getFlag().equals("drop"))
+			{
+				droprate = response.getDroprate();
+				System.err.printf("[i]\treceived a drop rate command.\n");
+				socket.close();
+				return;
+			}
+			else if (response.getFlag().equals("kill"))
+			{
+				System.err.printf("[i]\treceived a kill command for some reason.\n");
+				socket.close();
+				return;
+			}
+		}
+		
+	}
+	
+	public void setLoc(float newX, float newY)
+	{
+		xpos = newX;
+		ypos = newY;
+	}
+	
+	public void setDroprate(int newRate)
+	{
+		droprate = newRate;
+	}
+	
 	//the public read command that gets a value from the servers
 	public String read(String key) throws IOException
 	{
@@ -81,10 +140,10 @@ public class Client {
 	public void ohsamWrite(String key, String value) throws IOException
 	{
 		reqID++;
-		System.out.printf("about to read before ohsam-writing\n");
+		System.err.printf("about to read before ohsam-writing\n");
 		Message seqID = readMessage(key);
-		System.out.printf("about to ohsam-write\n");
-		//System.out.printf("Final seqID is %d\n", seqID.getSeqID());
+		System.err.printf("about to ohsam-write\n");
+		//System.err.printf("Final seqID is %d\n", seqID.getSeqID());
 		writeMessage(key, value, seqID.getSeqID() + 1);
 	}
 	
@@ -137,7 +196,7 @@ public class Client {
 		//wait for and read responses for most recent seqId
 		socket.setSoTimeout(5000);	//TODO : get better timeout duration
 		Message returnMessage = getResponses(socket, resendSet, messageBytes, 2);
-		//System.out.printf("%s\n",returnMessage.formatMessage());
+		//System.err.printf("%s\n",returnMessage.formatMessage());
 		socket.close();
 		return returnMessage;
 	}
@@ -180,7 +239,7 @@ public class Client {
 		{
 			packet = new DatagramPacket(new byte[1024], 1024);
 			timeout = false;
-			System.out.printf("about to wait for responses to a thing\n");
+			System.err.printf("about to wait for responses to a thing\n");
 			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
 				catch (SocketTimeoutException e)
 				{
@@ -197,42 +256,42 @@ public class Client {
 					e.printStackTrace();
 					throw e;
 				}
-				System.out.printf("found a packet, reqID = %d\n", response.getReqID());
-				if (response.getFlag() == "set-location")
+				System.err.printf("found a packet, reqID = %d\n", response.getReqID());
+				if (response.getFlag().equals("set-location"))
 				{
 					xpos = response.getXVal();
 					ypos = response.getYVal();
 				}
-				else if (response.getFlag() == "drop")
+				else if (response.getFlag().equals("drop"))
 				{
 					droprate = response.getDroprate();
 				}
-				else if (response.getFlag() == "kill")
+				else if (response.getFlag().equals("kill"))
 				{
-					System.out.printf("received a kill command for some reason. Ignoring it\n");
+					System.err.printf("received a kill command for some reason. Ignoring it\n");
 				}
 				else if (response.getReqID() == reqID && rng.nextInt(100) >= droprate)
 				{
-					System.out.printf("got a response\n");
+					System.err.printf("got a response\n");
 					
-					System.out.printf(response.formatMessage() + "\n");
+					System.err.printf(response.formatMessage() + "\n");
 					
 					//TODO: MAKE THIS NOT HORRIBLE
 					receivedServer = new Server(packet.getAddress(), packet.getPort());
 					removeServerFromSet(receivedServer, resendSet);
 					
 					//track most recent data
-					//System.out.printf("seqid from response is %d\n", response.getSeqID());
+					//System.err.printf("seqid from response is %d\n", response.getSeqID());
 					if (operation == 1 && (bestResponse.getSeqID() == -10 || (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() >= bestResponse.getPcID()))))
 					{
 						bestResponse = new Message(response.formatMessage());
-						//System.out.printf("updating best response\n");
+						//System.err.printf("updating best response\n");
 					}
 					
 					if (operation == 2 && (bestResponse.getSeqID() == -10 || (response.getSeqID() < bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() >= bestResponse.getPcID()))))
 					{
 						bestResponse = new Message(response.formatMessage());
-						//System.out.printf("updating best response\n");
+						//System.err.printf("updating best response\n");
 					}
 					i++;
 				}

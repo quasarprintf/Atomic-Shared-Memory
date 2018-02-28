@@ -1,7 +1,10 @@
 package testing;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +16,7 @@ import util.Server;
 
 
 /*
+   Test Commands:
    To create a client:					"newclient" *clientName* *pcId* *port* *serverSet* *xpos* *ypos*
    To create a server:					"newserver" *serverName* *IpAddress* *port*
    To create a serverSet:				"newserverset" *serversetName*
@@ -22,7 +26,22 @@ import util.Server;
    To read:								"read" *clientName* *key*
    To oh-SAM read:						"ohsamread" *clientName* *key*
    To write:							"write" *clientName* *key* *value*
-   to oh-SAM write:						"ohsamwrite" *clientName* *key* *value*
+   To oh-SAM write:						"ohsamwrite" *clientName* *key* *value*
+   
+   Manager Commands:
+   To set the port to use for manager:	"managerport" *port#*
+   To set the PCid to use for manager:	"managerpcid" *pcid*
+   To set a location for a server:		"setloc" *serverName* *xfloat* *yfloat*
+   To set drop rate for a server:		"drop" *drop%* *serverName*
+   To set drop rate for server set:		"dropset" *drop%* *serverName*
+   To kill a server:					"kill" *serverName*
+   To kill all servers in a set:		"killset" *serverSetName*
+   To revive a server:					"revive" *serverName*
+   To revive all servers in a set:		"reviveset" *serverSetName*
+   
+   To set location for a client:		"clientloc" *client* *xfloat* *yfloat*
+   To set droprate for a client:		"clientdrop" *client* *droprate*
+   
    To exit:								"end"
  */
 
@@ -45,12 +64,111 @@ public class DynamicRuntimeTests {
 		commands.put("addserverset",	(String[] args)		-> 	addServerSet(args));
 		commands.put("removeserver",	(String[] args)		-> 	removeServer(args));
 		commands.put("newserverset",	(String[] args)		-> 	createServerSet(args));
+		commands.put("manageclient",	(String[] args)		-> 	manageClient(args));
+		commands.put("managerport",		(String[] args)		-> 	outport(args));
+		commands.put("managerpcid",		(String[] args)		-> 	pcid(args));
+		commands.put("setloc",			(String[] args)		-> 	setloc(args));
+		commands.put("kill",			(String[] args)		-> 	kill(args));
+		commands.put("killset",			(String[] args)		-> 	killSet(args));
+		commands.put("revive",			(String[] args)		-> 	revive(args));
+		commands.put("reviveset",		(String[] args)		-> 	reviveSet(args));
+		commands.put("drop",			(String[] args)		-> 	drop(args));
+		commands.put("dropset",			(String[] args)		-> 	dropSet(args));
+		commands.put("clientloc",		(String[] args)		-> 	clientLoc(args));
+		commands.put("clientdrop",		(String[] args)		-> 	clientDrop(args));
+		
+		
 	}
 	//NOT CASE SENSITIVE
 
 	private static HashMap<String, Client> clients = new HashMap<String, Client>(1);
 	private static HashMap<String, Server> servers = new HashMap<String, Server>(10);
 	private static HashMap<String, HashSet<Server>> serverSet = new HashMap<String, HashSet<Server>>(2);
+	private static long timer;
+	private static int outport = 1998;
+	private static DatagramSocket socket;
+	private static int reqID = 0;
+	private static int pcID = 99;
+	
+	private static void pcid(String[] input)
+	{
+		pcID = (int)Integer.valueOf(input[1]);
+	}
+	
+	private static void outport(String[] input) throws SocketException
+	{
+		socket.close();
+		outport = (int)Integer.valueOf(input[1]);
+		socket = new DatagramSocket(outport);
+	}
+	
+	private static void setloc(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":set-location:" + pcID + ":" + input[2] + ":" + input[3]).getBytes();
+		DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[1]).getAddress(), servers.get(input[1]).getPort());
+		socket.send(packet);
+	}
+	
+	private static void clientLoc(String[] input)
+	{
+		clients.get(input[1]).setLoc(Float.parseFloat(input[2]), Float.parseFloat(input[3]));
+	}
+	
+	private static void kill(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":wait").getBytes();
+		DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[1]).getAddress(), servers.get(input[1]).getPort());
+		socket.send(packet);
+	}
+	
+	private static void killSet(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":wait").getBytes();
+		for (Server server:serverSet.get(input[1]))
+		{
+			DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, server.getAddress(), server.getPort());
+			socket.send(packet);
+		}
+	}
+	
+	private static void revive(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":wake").getBytes();
+		DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[1]).getAddress(), servers.get(input[1]).getPort());
+		socket.send(packet);
+	}
+	
+	private static void reviveSet(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":wake").getBytes();
+		for (Server server:serverSet.get(input[1]))
+		{
+			DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, server.getAddress(), server.getPort());
+			socket.send(packet);
+		}
+	}
+	
+	private static void drop(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":drop:" + input[1]).getBytes();
+		DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[2]).getAddress(), servers.get(input[2]).getPort());
+		socket.send(packet);
+	}
+	
+	private static void dropSet(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":drop:" + input[1]).getBytes();
+		for (Server server:serverSet.get(input[2]))
+		{
+			DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, server.getAddress(), server.getPort());
+			socket.send(packet);
+		}
+	}
+	
+	private static void clientDrop(String[] input)
+	{
+		clients.get(input[1]).setDroprate(Integer.parseInt(input[2]));
+	}
 	
 	private static void read(String[] input) throws IOException {
 		System.out.println("[r]\t" + input[2] + "->" + clients.get(input[1]).read(input[2]));
@@ -72,34 +190,38 @@ public class DynamicRuntimeTests {
 	
 	private static void addServer(String[] input) {
 		clients.get(input[1]).addServer(servers.get(input[2]));
-		System.out.println("[i]\tServer Added To Client:\t" + input[2] + "->" + input[1]);
+		System.err.println("[i]\tServer Added To Client:\t" + input[2] + "->" + input[1]);
 	}
 	
 	private static void createServer(String[] input) throws NumberFormatException, UnknownHostException {
 		servers.put(input[1], new Server(InetAddress.getByName(input[2]), (int)Integer.valueOf(input[3])));
-		System.out.println("[i]\tServer Created: \t" + input[1]);
+		System.err.println("[i]\tServer Created: \t" + input[1]);
 	}
 	
 	private static void createClient(String[] input) {
 		clients.put(input[1], new Client((int)Integer.valueOf(input[2]), (int)Integer.valueOf(input[3]), serverSet.get(input[4]), Float.valueOf(input[5]), Float.valueOf(input[6])));
-		System.out.println("[i]\tClient Created: \t" + input[1]);
+		System.err.println("[i]\tClient Created: \t" + input[1]);
 	}
 	
 	private static void addServerSet(String[] input) {
 		serverSet.get(input[1]).add(servers.get(input[2]));
-		System.out.println("[i]\tServer Added To Set\t" + input[2] + "->" + input[1]);
+		System.err.println("[i]\tServer Added To Set\t" + input[2] + "->" + input[1]);
 	}
 	
 	private static void removeServer(String[] input) {
 		clients.get(input[1]).removeServer(servers.get(input[2]));
-		System.out.println("[i]\tServer Removed From Client:\t" + input[2] + "-<" + input[1]);
+		System.err.println("[i]\tServer Removed From Client:\t" + input[2] + "-<" + input[1]);
 	}
 	
 	private static void createServerSet(String[] input)	{
 		serverSet.put(input[1], new HashSet<Server>(5));
-		System.out.println("[i]\tServerSet Created: \t" + input[1]);
+		System.err.println("[i]\tServerSet Created: \t" + input[1]);
 	}
 	
+	private static void manageClient(String[] input) throws SocketException
+	{
+		clients.get(input[1]).beManaged();
+	}
 	
 	
 	public static void parseCommand(String input) throws NumberFormatException, UnknownHostException, IOException {
@@ -107,8 +229,9 @@ public class DynamicRuntimeTests {
 		commands.get(commandParsed[0]).run(commandParsed);
 	}
 
-	public static void runDynamicTests() throws UnknownHostException 
+	public static void runDynamicTests() throws UnknownHostException, SocketException 
 	{
+		socket = new DatagramSocket(outport);
 		Scanner input = new Scanner(System.in);
 		String command;
 		String[] commandParsed;
@@ -123,16 +246,21 @@ public class DynamicRuntimeTests {
 			}
 			commandParsed = command.split(" ");
 			try {
+				timer = System.nanoTime();
 				commands.get(commandParsed[0]).run(commandParsed);
+				System.err.printf("Took %d ms\n", (System.nanoTime() - timer)/1000000);
 			} catch (NumberFormatException e) {
-				System.out.println("[e]\tFailed to convert port value to integer");
+				e.printStackTrace();
+				System.err.println("[e]\tFailed to convert port value to integer");
 			} catch (UnknownHostException e) {
-				System.out.println("[e]\tCould not find host");
+				e.printStackTrace();
+				System.err.println("[e]\tCould not find host");
 			} catch (IOException e) {
-				System.out.println("[e]\tAn IO exception has occurred");
+				e.printStackTrace();
+				System.err.println("[e]\tAn IO exception has occurred");
 			} catch (Exception e) {
-				if (!commands.containsKey(commandParsed[0])) System.out.println("[e]\tCommand not found");
-				else System.out.println("[e]\tBad Input in " + commandParsed[0]);
+				if (!commands.containsKey(commandParsed[0])) System.err.println("[e]\tCommand not found");
+				else System.err.println("[e]\tBad Input in " + commandParsed[0]);
 				e.printStackTrace();
 			}
 		}

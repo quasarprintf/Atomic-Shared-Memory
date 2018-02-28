@@ -52,7 +52,7 @@ public class Message {
 			{buildKill(messageArray);}
 		else
 		{
-			System.out.printf("Message was %s\n", messageString);
+			System.err.printf("Message was %s\n", messageString);
 			throw new RuntimeException("ERROR - message type unknown");
 		}
 		
@@ -121,8 +121,6 @@ public class Message {
 		pcID = Integer.parseInt(messageArray[2]);
 		xval = Float.parseFloat(messageArray[3]);
 		yval = Float.parseFloat(messageArray[4]);
-		xval = Float.parseFloat(messageArray[5]);
-		yval = Float.parseFloat(messageArray[6]);
 	}
 	
 	private void buildDrop(String[] messageArray)
@@ -258,27 +256,27 @@ public class Message {
 	
 	private String formatReadRequest()
 	{
-		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + ":" + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
 	}
 	
 	private String formatReadReturn()
 	{
-		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + String.valueOf(seqID) + ":" + value;
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) +":" + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + String.valueOf(seqID) + ":" + value;
 	}
 	
 	private String formatWriteRequest()
 	{
-		return reqID + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + String.valueOf(seqID) + ":" + key + ":" + value;
+		return reqID + ":" + flag + ":" + String.valueOf(pcID) + ":" + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + String.valueOf(seqID) + ":" + key + ":" + value;
 	}
 	
 	private String formatWriteReturn()
 	{
-		return reqID + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
+		return reqID + ":" + flag + ":" + String.valueOf(pcID) + ":" +String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
 	}
 	
 	private String formatOhsamRead()
 	{
-		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
+		return String.valueOf(reqID) + ":" + flag + ":" + String.valueOf(pcID) + ":" +String.valueOf(xval) + ":" + String.valueOf(yval) + ":" + key;
 	}
 	
 	private String formatSetLocation()
