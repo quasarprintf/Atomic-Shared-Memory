@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 import client.Client;
+import util.ByteArray;
+import util.Message;
 import util.Server;
 
 
@@ -41,6 +43,8 @@ import util.Server;
    
    To set location for a client:		"clientloc" *client* *xfloat* *yfloat*
    To set droprate for a client:		"clientdrop" *client* *droprate*
+   
+   To do a reliable read:				"reliableread" *server* *key*
    
    To exit:								"end"
  */
@@ -76,6 +80,7 @@ public class DynamicRuntimeTests {
 		commands.put("dropset",			(String[] args)		-> 	dropSet(args));
 		commands.put("clientloc",		(String[] args)		-> 	clientLoc(args));
 		commands.put("clientdrop",		(String[] args)		-> 	clientDrop(args));
+		commands.put("reliableread",	(String[] args)		-> 	reliableRead(args));
 		
 		
 	}
@@ -97,7 +102,11 @@ public class DynamicRuntimeTests {
 	
 	private static void outport(String[] input) throws SocketException
 	{
-		socket.close();
+		try
+		{
+			socket.close();
+		}
+		catch(Exception e) {}
 		outport = (int)Integer.valueOf(input[1]);
 		socket = new DatagramSocket(outport);
 	}
@@ -170,6 +179,36 @@ public class DynamicRuntimeTests {
 		clients.get(input[1]).setDroprate(Integer.parseInt(input[2]));
 	}
 	
+	private static void reliableRead(String[] input) throws IOException {
+		Message response;
+		DatagramPacket packet;
+		byte[] messageBytes = (reqID++ + ":reliable-read:" + pcID + ":0.0:0.0:" + input[2]).getBytes();
+		packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[1]).getAddress(), servers.get(input[1]).getPort());
+		socket.send(packet);
+		while (true)
+		{
+			packet = new DatagramPacket(new byte[1024], 1024);
+			try	{socket.receive(packet);}	//wait for packets until it gets one or times out
+			catch(Exception e)
+			{
+				e.printStackTrace();
+				continue;
+			}
+			try {response = new Message(ByteArray.parseToString(packet.getData()));}
+			catch (Exception e)
+			{
+				socket.close();
+				e.printStackTrace();
+				throw e;
+			}
+			if (response.getFlag().equals("read-return"))
+			{
+				System.out.printf("[r]\t%s -> %s\n", input[2], response.getValue());
+				return;
+			}
+		}
+	}
+	
 	private static void read(String[] input) throws IOException {
 		System.out.println("[r]\t" + input[2] + "->" + clients.get(input[1]).read(input[2]));
 	}
@@ -231,7 +270,11 @@ public class DynamicRuntimeTests {
 
 	public static void runDynamicTests() throws UnknownHostException, SocketException 
 	{
+		try
+		{
 		socket = new DatagramSocket(outport);
+		}
+		catch (Exception e) {}
 		Scanner input = new Scanner(System.in);
 		String command;
 		String[] commandParsed;

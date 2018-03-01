@@ -21,9 +21,10 @@ public class Message {
 	 * oh-SAM read		: <reqid>:"ohsam-read-request":<pcid>:<xpos>:<ypos>:<key>
 	 * 
 	 * Management messages:
-	 * set-location		: <reqid>:"set-location":<pcid>:<x-coordinate>:<y-coordinate>
-	 * drop		: <reqid>:"drop":<dropfloat>
-	 * kill		: <reqid>:"wait"
+	 * set-location	:	<reqid>:"set-location":<pcid>:<x-coordinate>:<y-coordinate>
+	 * drop			:	<reqid>:"drop":<dropfloat>
+	 * kill			:	<reqid>:"wait"
+	 * reliable read:	<reqid>:"reliable-read":<pcid>:"0.0":"0.0":<key>
 	 */
 	
 	public Message(String messageString) throws RuntimeException
@@ -50,6 +51,8 @@ public class Message {
 			{buildDrop(messageArray);}
 		else if (messageArray[1].equals("kill"))
 			{buildKill(messageArray);}
+		else if (messageArray[1].equals("reliable-read"))
+			{buildReliableRead(messageArray);}
 		else
 		{
 			System.err.printf("Message was %s\n", messageString);
@@ -134,6 +137,16 @@ public class Message {
 	{
 		reqID = Integer.parseInt(messageArray[0]);
 		flag = messageArray[1];
+	}
+	
+	private void buildReliableRead(String[] messageArray)
+	{
+		reqID = Integer.parseInt(messageArray[0]);
+		flag = messageArray[1];
+		pcID = Integer.parseInt(messageArray[2]);
+		xval = Float.parseFloat(messageArray[3]);
+		yval = Float.parseFloat(messageArray[4]);
+		key = messageArray[5];
 	}
 	
 	
@@ -248,6 +261,8 @@ public class Message {
 			{return formatDrop();}
 		else if (flag.equals("kill"))
 			{return formatKill();}
+		else if (flag.equals("reliable-read"))
+			{return formatReliableRead();}
 		else
 			{throw new RuntimeException("ERROR - message type unknown: " + flag);}
 	}
@@ -291,6 +306,11 @@ public class Message {
 	private String formatKill()
 	{
 		return String.valueOf(reqID) + ":" + flag;
+	}
+	
+	private String formatReliableRead()
+	{
+		return formatReadRequest();
 	}
 	
 }
