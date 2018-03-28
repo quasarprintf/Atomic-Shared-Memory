@@ -27,11 +27,11 @@ class API:
         self.command('addserverset serversetAPI ' + address + ":" + str(port))
         self.lock.release()
 
-    def start(self):
+    def start(self, port):
         self.lock.acquire()
-        self.raw_command('managerport 3008')
-        self.raw_command('managerpcid 3008')
-        self.command('newclient clientAPI 1 2000 serversetAPI 5400.0 5400.0')
+        self.raw_command('managerport ' + str(port))
+        self.raw_command('managerpcid ' + str(port))
+        self.command('newclient clientAPI 1 %d serversetAPI 270.0 270.0' % (port + 1))
         self.lock.release()
 
     def raw_command(self, command):
@@ -63,7 +63,7 @@ class API:
         self.command("write clientAPI color " + hex(color[0])[2:].zfill(2) + hex(color[1])[2:].zfill(2) + hex(color[2])[2:].zfill(2))
 
     def set_location(self, server, location):
-        self.raw_command("setloc " + server + " " + str(float(location[0] * 20)) + " " + str(float(location[1] * 20)))
+        self.raw_command("setloc " + server + " " + str(float(location[0])) + " " + str(float(location[1])))
 
 red = pygame.Rect((650, 50, 80, 50))
 green = pygame.Rect((650, 250, 80, 50))
@@ -81,6 +81,7 @@ def draw_background():
 
 clock = pygame.time.Clock()
 connection = API()
+reliable = API()
 
 class Server(pygame.sprite.Sprite):
     def __init__(self):
@@ -111,11 +112,11 @@ class Server(pygame.sprite.Sprite):
         self.update_location()
 
     def update_color(self):
-        color = connection.get_color(self.address + ":" + str(self.port))
+        color = reliable.get_color(self.address + ":" + str(self.port))
         self.set_color(color)
 
     def update_location(self):
-        connection.set_location(self.address + ":" + str(self.port), self.rect.center)
+        reliable.set_location(self.address + ":" + str(self.port), self.rect.center)
 
     def set_color(self, color):
         pixels = pygame.PixelArray(self.image)
@@ -135,9 +136,12 @@ for s in servers:
     s.address = server_addresses[address_index].split(":")[0]
     s.port = int(server_addresses[address_index].split(":")[1])
     connection.add_server(s.address, s.port)
+    reliable.add_server(s.address, s.port)
     address_index += 1
 
-connection.start()
+port = random.randint(3000, 4000)
+connection.start(port)
+reliable.start(port + 2)
 
 def color_thread():
     while True:
