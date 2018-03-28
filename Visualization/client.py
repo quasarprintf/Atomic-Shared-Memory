@@ -8,6 +8,8 @@ done = False
 
 stick = pygame.transform.smoothscale(pygame.image.load("stick.png"), (64,64))
 
+screen_lock = threading.Lock()
+
 def distance(a, b):
     return math.sqrt(math.pow(a[0] - b[0], 2) + math.pow(a[1] - b[1], 2))
 
@@ -147,8 +149,9 @@ def color_thread():
     while True:
         time.sleep(1)
         for s in servers:
+            screen_lock.acquire()
             s.update_color()
-            pass
+            screen_lock.release()
 
 t = threading.Thread(target=color_thread)
 t.start()
@@ -175,7 +178,9 @@ while True:
                     s.release()
     for s in servers:
         s.update()
+    screen_lock.acquire()
     draw_background()
     servers.draw(screen)
     pygame.display.update()
+    screen_lock.release()
     clock.tick(144)
