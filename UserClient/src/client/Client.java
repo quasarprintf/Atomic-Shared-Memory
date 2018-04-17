@@ -57,9 +57,11 @@ public class Client {
 			if (checkServer.equals(SERVER))
 			{
 				SERVERSET.remove(checkServer);
+				//System.err.printf("[i]	removed server: remaining servers = %d\n", servers.size());
 				return;
 			}
 		}
+		//System.err.printf("[i]	failed to remove server\n");
 	}
 	
 	//blocks until a management message is received. For testing purposes
