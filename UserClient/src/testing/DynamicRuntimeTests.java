@@ -46,6 +46,10 @@ import util.Server;
    
    To do a reliable read:				"reliableread" *server* *key*
    
+   To add a server to a server:			"learnserver" *learningServer* *serverToLearnAbout*
+   To remove a server from a server:	"forgetserver" *forgettingServer* *serverToForgetAbout*
+   To clear all data from a server:		"clear" *server*
+   
    To exit:								"end"
  */
 
@@ -72,6 +76,7 @@ public class DynamicRuntimeTests {
 		commands.put("managerport",		(String[] args)		-> 	outport(args));
 		commands.put("managerpcid",		(String[] args)		-> 	pcid(args));
 		commands.put("setloc",			(String[] args)		-> 	setloc(args));
+		commands.put("clear",			(String[] args)		-> 	clear(args));
 		commands.put("kill",			(String[] args)		-> 	kill(args));
 		commands.put("killset",			(String[] args)		-> 	killSet(args));
 		commands.put("revive",			(String[] args)		-> 	revive(args));
@@ -81,6 +86,8 @@ public class DynamicRuntimeTests {
 		commands.put("clientloc",		(String[] args)		-> 	clientLoc(args));
 		commands.put("clientdrop",		(String[] args)		-> 	clientDrop(args));
 		commands.put("reliableread",	(String[] args)		-> 	reliableRead(args));
+		commands.put("learnserver",		(String[] args)		-> 	learnServer(args));
+		commands.put("forgetserver",	(String[] args)		-> 	forgetServer(args));
 		
 		
 	}
@@ -123,6 +130,13 @@ public class DynamicRuntimeTests {
 		clients.get(input[1]).setLoc(Float.parseFloat(input[2]), Float.parseFloat(input[3]));
 	}
 	
+	private static void clear(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":clear").getBytes();
+		DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[1]).getAddress(), servers.get(input[1]).getPort());
+		socket.send(packet);
+	}
+	
 	private static void kill(String[] input) throws IOException
 	{
 		byte[] messageBytes = (reqID++ + ":wait").getBytes();
@@ -155,6 +169,20 @@ public class DynamicRuntimeTests {
 			DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, server.getAddress(), server.getPort());
 			socket.send(packet);
 		}
+	}
+	
+	private static void learnServer(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":add-server:" + String.valueOf(pcID) + ":0:0:" + servers.get(input[2]).getAddress().getHostAddress() +":" + servers.get(input[2]).getPort()).getBytes();
+		DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[1]).getAddress(), servers.get(input[1]).getPort());
+		socket.send(packet);
+	}
+	
+	private static void forgetServer(String[] input) throws IOException
+	{
+		byte[] messageBytes = (reqID++ + ":remove-server:" + String.valueOf(pcID) + ":0:0:" + servers.get(input[2]).getAddress().getHostAddress() +":" + servers.get(input[2]).getPort()).getBytes();
+		DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, servers.get(input[1]).getAddress(), servers.get(input[1]).getPort());
+		socket.send(packet);
 	}
 	
 	private static void drop(String[] input) throws IOException
