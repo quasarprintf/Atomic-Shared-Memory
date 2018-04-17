@@ -43,6 +43,7 @@ import util.Server;
    
    To set location for a client:		"clientloc" *client* *xfloat* *yfloat*
    To set droprate for a client:		"clientdrop" *client* *droprate*
+   To set resend delay for a client:	"resend" *client* *delayMS*
    
    To do a reliable read:				"reliableread" *server* *key*
    
@@ -85,6 +86,7 @@ public class DynamicRuntimeTests {
 		commands.put("dropset",			(String[] args)		-> 	dropSet(args));
 		commands.put("clientloc",		(String[] args)		-> 	clientLoc(args));
 		commands.put("clientdrop",		(String[] args)		-> 	clientDrop(args));
+		commands.put("resend",			(String[] args)		-> 	clientResendDelay(args));
 		commands.put("reliableread",	(String[] args)		-> 	reliableRead(args));
 		commands.put("learnserver",		(String[] args)		-> 	learnServer(args));
 		commands.put("forgetserver",	(String[] args)		-> 	forgetServer(args));
@@ -205,6 +207,11 @@ public class DynamicRuntimeTests {
 	private static void clientDrop(String[] input)
 	{
 		clients.get(input[1]).setDroprate(Integer.parseInt(input[2]));
+	}
+	
+	private static void clientResendDelay(String[] input)
+	{
+		clients.get(input[1]).setResendDelay(Integer.parseInt(input[2]));
 	}
 	
 	private static void reliableRead(String[] input) throws IOException {
