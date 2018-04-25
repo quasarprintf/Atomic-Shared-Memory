@@ -263,6 +263,8 @@ public abstract class DataServer {
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				// release the semaphore to avoid deadlock in the case of this catch
+				this.addressSemaphore.release();
 				// try it again
 				addRelay(address);
 			}
