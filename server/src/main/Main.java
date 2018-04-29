@@ -39,7 +39,12 @@ public class Main {
 		// address the developer last had on their machine so they could run the project from the IDE and not
 		// the terminal
 		
-		String arg = args[0];
+		String arg;
+		
+		if (args.length > 0)
+			arg = args[0];
+		else
+			arg = "-server";
 		
 		if (arg.equals("-h") || arg.equals("-h") || arg.equals("help")) {
 			System.out.println(helpString());
@@ -51,7 +56,13 @@ public class Main {
 		
 			String address = args[1].split(":")[0];
 			int port = Integer.parseInt(args[1].split(":")[1]);
-			String[] addresses = args[2].split(";");
+			
+			String[] addresses;
+			
+			if (args.length > 2)
+				addresses = args[2].split(";");
+			else
+				addresses = null;
 			process(address, port, addresses);
 		}
 		else if (arg.equals("-make-bats")){
@@ -123,10 +134,21 @@ public class Main {
 		
 		MemoryDataServer server;
 		
-		Address[] addresses = new Address[addressesStr.length];
 		
-		for (int i = 0; i < addresses.length; i++)
-			addresses[i] = getAddressFromPair(addressesStr[i]);
+		Address[] addresses;
+		
+		if (addressesStr != null) {
+			
+			addresses = new Address[addressesStr.length];
+			
+			for (int i = 0; i < addresses.length; i++)
+				addresses[i] = getAddressFromPair(addressesStr[i]);
+			
+		}
+		else
+			addresses = null;
+		
+		
 		
 		
 		try {

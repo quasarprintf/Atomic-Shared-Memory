@@ -7,6 +7,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.concurrent.Semaphore;
@@ -217,7 +218,7 @@ public abstract class DataServer {
 				if (a.toString().equals(address.toString()))
 					return; // it's already added; don't add it twice
 			
-			this.address.add(address); // it's not added yet; add it
+			this.addresses.add(address); // it's not added yet; add it
 		
 			addressSemaphore.release();
 				    
@@ -239,7 +240,7 @@ public abstract class DataServer {
 			
 			for (Address a : this.addresses)
 				if (a.toString().equals(address.toString()))
-					this.address.remove(a); it's here; remove it
+					this.addresses.remove(a); //it's here; remove it
 			
 			addressSemaphore.release();
 				    
