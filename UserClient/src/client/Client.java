@@ -48,7 +48,7 @@ public class Client {
 	}
 	
 
-	private void removeServerFromSet(Server SERVER, HashSet<Server> SERVERSET)
+	private boolean removeServerFromSet(Server SERVER, HashSet<Server> SERVERSET)
 	{
 		Iterator<Server> removeIterator = SERVERSET.iterator();
 		Server checkServer;
@@ -59,9 +59,10 @@ public class Client {
 			{
 				SERVERSET.remove(checkServer);
 				//System.err.printf("[i]	removed server: remaining servers = %d\n", servers.size());
-				return;
+				return true;
 			}
 		}
+		return false;
 		//System.err.printf("[i]	failed to remove server\n");
 	}
 	
@@ -301,22 +302,28 @@ public class Client {
 					
 					//TODO: MAKE THIS NOT HORRIBLE
 					receivedServer = new Server(packet.getAddress(), packet.getPort());
-					removeServerFromSet(receivedServer, resendSet);
-					
-					//track most recent data
-					//System.err.printf("seqid from response is %d\n", response.getSeqID());
-					if (operation == 1 && (bestResponse.getSeqID() == -10 || (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() >= bestResponse.getPcID()))))
+					if (removeServerFromSet(receivedServer, resendSet))
 					{
-						bestResponse = new Message(response.formatMessage());
-						//System.err.printf("updating best response\n");
-					}
 					
-					if (operation == 2 && (bestResponse.getSeqID() == -10 || (response.getSeqID() < bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() >= bestResponse.getPcID()))))
-					{
-						bestResponse = new Message(response.formatMessage());
-						//System.err.printf("updating best response\n");
+						//track most recent data
+						//System.err.printf("seqid from response is %d\n", response.getSeqID());
+						if (operation == 1 && (bestResponse.getSeqID() == -10 || (response.getSeqID() > bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() >= bestResponse.getPcID()))))
+						{
+							bestResponse = new Message(response.formatMessage());
+							//System.err.printf("updating best response\n");
+						}
+					
+						if (operation == 2 && (bestResponse.getSeqID() == -10 || (response.getSeqID() < bestResponse.getSeqID() || (response.getSeqID() == bestResponse.getSeqID() && response.getPcID() >= bestResponse.getPcID()))))
+						{
+							bestResponse = new Message(response.formatMessage());
+							//System.err.printf("updating best response\n");
+						}
+						i++;
 					}
-					i++;
+					else
+					{
+						System.err.printf("response was a duplicate\n");
+					}
 				}
 				
 			}
