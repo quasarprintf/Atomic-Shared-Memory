@@ -63,9 +63,9 @@ public abstract class DataServer {
 	public final int port, id;
 	public int droprate = 0;
 
-	protected final Address[] addresses;
+	protected final ArrayList<Address> addresses;
 	public int quorum() {
-		return (int) (this.addresses.length / 2) + 1;
+		return (int) (this.addresses.size() / 2) + 1;
 	}
 
 	private Location location = new Location(0, 0);
@@ -92,8 +92,12 @@ public abstract class DataServer {
 
 		this.id = serverid;
 		this.port = port;
-		this.addresses = addresses;
-
+		
+		this.addresses = new ArrayList<Address>();
+		
+		if (addresses != null)
+			for (Address a : addresses)
+				this.addresses.add(a);
 
 		try {
 			this.soc = new DatagramSocket(port, InetAddress.getByName(address));
@@ -149,6 +153,7 @@ public abstract class DataServer {
 			OhSamRelayMessage message = new OhSamRelayMessage(returnAddress, this.localAddress, reqid, clientid, clientxpos, clientypos, clientid, seqid, key, value, returnAddress, clientypos, clientypos);
 
 			this.addRelay(message);
+			
 			for (Address recipient : this.addresses)
 				this.send(new OhSamRelayMessage(this.localAddress, recipient, reqid, this.id, this.location.x, this.location.y, clientid, seqid, key, value, returnAddress, clientxpos, clientypos));
 
@@ -200,7 +205,56 @@ public abstract class DataServer {
 
 	}
 
+	public final Semaphore addressSemaphore = new Semaphore(1);
+	
+	
+	public void addServer(Address address) {
+		
+		try {
+			addressSemaphore.acquire();
+			
+			for (Address a : this.addresses)
+				if (a.toString().equals(address.toString()))
+					return; // it's already added; don't add it twice
+			
+			this.address.add(address); // it's not added yet; add it
+		
+			addressSemaphore.release();
+				    
+			return;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			// release semaphore if we have it
+			this.addressSemaphore.release();
+			// try again
+			this.addServer(address);
+		}
+	}
+	
+	public void removeServer(Address address) {
 
+		try {
+			
+			addressSemaphore.acquire();
+			
+			for (Address a : this.addresses)
+				if (a.toString().equals(address.toString()))
+					this.address.remove(a); it's here; remove it
+			
+			addressSemaphore.release();
+				    
+			return;
+			
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			// release semaphore if we have it
+			this.addressSemaphore.release();
+			// try again
+			this.addServer(address);
+		}
+		
+	}
+	
 	public void close() {
 		this.soc.close();
 	}
