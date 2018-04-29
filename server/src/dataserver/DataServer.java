@@ -49,7 +49,8 @@ public abstract class DataServer {
 	WAKE_COMMAND_FLAG = "wake",
 	SET_LOCATION_FLAG = "set-location",
 	ADD_SERVER_FLAG = "add-server",
-	REMOVE_SERVER_FLAG = "remove-server";
+	REMOVE_SERVER_FLAG = "remove-server",
+	CLEAR_ALL_FLAG = "clear";
 
 
 
@@ -64,9 +65,23 @@ public abstract class DataServer {
 	public final int port, id;
 	public int droprate = 0;
 
-	protected final ArrayList<Address> addresses;
-	public int quorum() {
-		return (int) (this.addresses.size() / 2) + 1;
+	protected volatile ArrayList<Address> addresses;
+	public int majority() {
+
+		try {
+			this.addressSemaphore.acquire();
+
+			int out = (int) ((this.addresses.size() + 1) / 2) + 1;
+			
+
+			this.addressSemaphore.release();
+			return out;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			this.addressSemaphore.release();
+			return this.majority();
+		}
+		
 	}
 
 	private Location location = new Location(0, 0);
@@ -93,9 +108,9 @@ public abstract class DataServer {
 
 		this.id = serverid;
 		this.port = port;
-		
+
 		this.addresses = new ArrayList<Address>();
-		
+
 		if (addresses != null)
 			for (Address a : addresses)
 				this.addresses.add(a);
@@ -154,7 +169,7 @@ public abstract class DataServer {
 			OhSamRelayMessage message = new OhSamRelayMessage(returnAddress, this.localAddress, reqid, clientid, clientxpos, clientypos, clientid, seqid, key, value, returnAddress, clientypos, clientypos);
 
 			this.addRelay(message);
-			
+
 			for (Address recipient : this.addresses)
 				this.send(new OhSamRelayMessage(this.localAddress, recipient, reqid, this.id, this.location.x, this.location.y, clientid, seqid, key, value, returnAddress, clientxpos, clientypos));
 
@@ -207,21 +222,21 @@ public abstract class DataServer {
 	}
 
 	public final Semaphore addressSemaphore = new Semaphore(1);
-	
-	
+
+
 	public void addServer(Address address) {
-		
+
 		try {
 			addressSemaphore.acquire();
-			
+
 			for (Address a : this.addresses)
 				if (a.toString().equals(address.toString()))
 					return; // it's already added; don't add it twice
-			
+
 			this.addresses.add(address); // it's not added yet; add it
-		
+
 			addressSemaphore.release();
-				    
+
 			return;
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -231,21 +246,21 @@ public abstract class DataServer {
 			this.addServer(address);
 		}
 	}
-	
+
 	public void removeServer(Address address) {
 
 		try {
-			
+
 			addressSemaphore.acquire();
-			
+
 			for (Address a : this.addresses)
 				if (a.toString().equals(address.toString()))
 					this.addresses.remove(a); //it's here; remove it
-			
+
 			addressSemaphore.release();
-				    
+
 			return;
-			
+
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			// release semaphore if we have it
@@ -253,9 +268,12 @@ public abstract class DataServer {
 			// try again
 			this.addServer(address);
 		}
-		
+
 	}
-	
+
+	public abstract void clear();
+
+
 	public void close() {
 		this.soc.close();
 	}
@@ -303,7 +321,7 @@ public abstract class DataServer {
 		void addRelay(Address address) {
 
 			try {
-				
+
 				addressSemaphore.acquire(); // this is the line that throws the interrupted exception
 
 				for (Address addr : this.addresses)
@@ -378,7 +396,6 @@ public abstract class DataServer {
 			request.addRelay(returnAddress);
 
 
-
 		}
 
 		// if the client reqid is NEWER (of higher value) than the reqid of the request we're currently handling,
@@ -407,7 +424,7 @@ public abstract class DataServer {
 
 		int oldSeqid = this.getTime(key);
 
-		if (this.getNumRelays(reqid, clientid) == this.quorum()) {
+		if (this.getNumRelays(reqid, clientid) == this.majority()) {
 			this.send(new ReadReturnMessage(
 					this.localAddress, 
 					message.getAddress(), 

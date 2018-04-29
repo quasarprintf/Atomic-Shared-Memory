@@ -82,6 +82,33 @@ public class MemoryDataServer extends DataServer {
 		
 	}
 
+	@Override
+	public void clear() {
+		
+		try {
+			this.addressSemaphore.acquire();
+		
+			for (Address a : this.addresses)
+				this.addresses.remove(a);
+			
+			this.addressSemaphore.release();
+		} catch (InterruptedException e) {
+			
+			
+			e.printStackTrace();
+			this.addressSemaphore.release();
+			this.clear();
+			
+		}
+		
+
+		this.TIME.clear();
+		this.DATA.clear();
+		
+		return;
+		
+	}
+
 	
 
 

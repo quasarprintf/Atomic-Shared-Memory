@@ -78,6 +78,9 @@ public class MessageParser {
 		else if (flag.equals(DataServer.REMOVE_SERVER_FLAG))
 			this.server.removeServer(new Address(message.get(5), message.get(6)));
 
+		else if (flag.equals(DataServer.CLEAR_ALL_FLAG))
+			this.server.clear();
+		
 		/* ###############################################################################
 		 * ### WAKE MESSAGE ##############################################################
 		 * ###############################################################################
