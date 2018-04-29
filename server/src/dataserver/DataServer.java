@@ -226,12 +226,22 @@ public abstract class DataServer {
 
 	public void addServer(Address address) {
 
+		// if we're trying to add ourselves, no
+		if (address.toString().equals(this.localAddress.toString()))
+			return;
+		
 		try {
 			addressSemaphore.acquire();
 
+			
+			
 			for (Address a : this.addresses)
-				if (a.toString().equals(address.toString()))
+				if (a.toString().equals(address.toString())) {
+					
+					addressSemaphore.release();
+					
 					return; // it's already added; don't add it twice
+				}
 
 			this.addresses.add(address); // it's not added yet; add it
 
