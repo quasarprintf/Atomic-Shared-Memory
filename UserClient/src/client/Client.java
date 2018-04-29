@@ -137,7 +137,7 @@ public class Client {
 		return value.getValue();
 	}
 	
-	//the public write command that writes a value to the servers
+	//the public write command that writes a value to the servers following multiple-writer protocol
 	public void write(String key, String value) throws IOException
 	{
 		reqID++;
@@ -145,14 +145,29 @@ public class Client {
 		writeMessage(key, value, seqID.getSeqID() + 1);
 	}
 	
+	//the public write command that writes a value to the servers following single-writer protocol
+	public void singleWrite(String key, String value) throws IOException
+	{
+		reqID++;
+		writeMessage(key, value, reqID);
+	}
+	
+	public void ohmamWrite(String key, String value) throws IOException
+	{
+		reqID++;
+		System.err.printf("about to read before ohmam-writing\n");
+		Message seqID = readMessage(key);
+		System.err.printf("about to ohmam-write\n");
+		//System.err.printf("Final seqID is %d\n", seqID.getSeqID());
+		writeMessage(key, value, seqID.getSeqID() + 1);
+	}
+	
 	public void ohsamWrite(String key, String value) throws IOException
 	{
 		reqID++;
-		System.err.printf("about to read before ohsam-writing\n");
-		Message seqID = readMessage(key);
 		System.err.printf("about to ohsam-write\n");
 		//System.err.printf("Final seqID is %d\n", seqID.getSeqID());
-		writeMessage(key, value, seqID.getSeqID() + 1);
+		writeMessage(key, value, reqID);
 	}
 	
 	public String ohsamRead(String key) throws IOException
