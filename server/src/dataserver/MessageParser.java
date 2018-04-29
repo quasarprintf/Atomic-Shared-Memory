@@ -71,6 +71,11 @@ public class MessageParser {
 			this.server.droprate = Integer.parseInt(message.get(2));
 			return;
 		}
+		else if (flag.equals(DataServer.ADD_SERVER_FLAG))
+			this.server.addServer(new Address(message.get(5), message.get(6)));
+		
+		else if (flag.equals(DataServer.REMOVE_SERVER_FLAG))
+			this.server.removeServer(new Address(message.get(5), message.get(6)));
 
 		/* ###############################################################################
 		 * ### WAKE MESSAGE ##############################################################
