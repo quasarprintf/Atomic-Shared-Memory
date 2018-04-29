@@ -46,7 +46,9 @@ public abstract class DataServer {
 	OHSAM_READ_REQUEST_FLAG = "ohsam-read-request",
 	WAIT_COMMAND_FLAG = "wait", 
 	WAKE_COMMAND_FLAG = "wake",
-	SET_LOCATION_FLAG = "set-location";
+	SET_LOCATION_FLAG = "set-location",
+	ADD_SERVER_FLAG = "add-server",
+	REMOVE_SERVER_FLAG = "remove-server";
 
 
 
