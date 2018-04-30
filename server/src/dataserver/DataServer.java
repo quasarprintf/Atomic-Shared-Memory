@@ -275,7 +275,7 @@ public abstract class DataServer {
 
 			addressSemaphore.acquire();
 
-			Address del;
+			Address del = null;
 			
 			for (Address a : this.addresses)
 				if (a.toString().equals(address.toString())) {
