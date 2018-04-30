@@ -263,10 +263,17 @@ public abstract class DataServer {
 
 			addressSemaphore.acquire();
 
+			Address del;
+			
 			for (Address a : this.addresses)
-				if (a.toString().equals(address.toString()))
-					this.addresses.remove(a); //it's here; remove it
+				if (a.toString().equals(address.toString())) {
+					del = a; //it's here; remove it
+					break;
+				}
 
+			if (del != null)
+				this.addresses.remove(del);
+			
 			addressSemaphore.release();
 
 			return;
