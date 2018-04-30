@@ -170,6 +170,18 @@ public abstract class DataServer {
 
 			this.addRelay(message);
 
+			if (this.getNumRelays(reqid, clientid) == this.majority()) {
+			this.send(new ReadReturnMessage(
+					this.localAddress, 
+					message.getAddress(), 
+					reqid, 
+					this.id,
+					clientxpos,
+					clientypos,
+					this.getTime(key), 
+					this.getData(key)));
+			}
+			
 			for (Address recipient : this.addresses)
 				this.send(new OhSamRelayMessage(this.localAddress, recipient, reqid, this.id, this.location.x, this.location.y, clientid, seqid, key, value, returnAddress, clientxpos, clientypos));
 
