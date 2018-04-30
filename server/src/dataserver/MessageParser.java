@@ -145,8 +145,10 @@ public class MessageParser {
 			try {
 
 				// 1/droprate probability of just ignoring this message
-				if (new Random().nextInt(100) < this.server.droprate)
-					return;
+				if (new Random().nextInt(100) < this.server.droprate) {
+					System.out.println("Dropping message \t\t\t:\t\t" + message);
+					return;	
+				}
 
 				else
 					new ClientPingSimulator(this.server, message, this.server.getPing(message.getX(), message.getY())).start();
