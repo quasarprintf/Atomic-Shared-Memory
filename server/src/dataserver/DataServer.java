@@ -430,7 +430,7 @@ public abstract class DataServer {
 		// if the client reqid is NEWER (of higher value) than the reqid of the request we're currently handling,
 		// then we know the client already got all the responses it needs from other servers and has moved on to
 		// another request
-		else if (reqid > request.reqid) {
+		else if (clientid == request.clientid && reqid > request.reqid) {
 
 			// clear out the old request
 			this.requests.remove(clientid);
